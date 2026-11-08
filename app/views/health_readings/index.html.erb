@@ -1,0 +1,52 @@
+<% status_pill = {
+  "green" => "bg-emerald-500/15 text-emerald-300 border-emerald-500/40",
+  "yellow" => "bg-amber-500/15 text-amber-300 border-amber-500/40",
+  "red" => "bg-rose-500/15 text-rose-300 border-rose-500/40"
+} %>
+<% status_dot = { "green" => "bg-emerald-400", "yellow" => "bg-amber-400", "red" => "bg-rose-400" } %>
+
+<div class="mx-auto max-w-5xl px-4 py-10">
+  <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-400">Historial</p>
+      <h1 class="mt-1 text-2xl font-bold text-white">Mediciones registradas</h1>
+      <p class="mt-1 text-sm text-slate-400"><%= @astronaut.name %> · <%= @astronaut.mission.name %></p>
+    </div>
+    <div class="flex gap-3">
+      <%= link_to "← Dashboard", root_path(mission_id: @astronaut.mission_id, astronaut_id: @astronaut.id), class: "rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800" %>
+      <%= link_to "+ Nueva medición", new_health_reading_path(mission_id: @astronaut.mission_id, astronaut_id: @astronaut.id), class: "rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-cyan-400" %>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl">
+    <table class="min-w-full divide-y divide-slate-800 text-sm">
+      <thead>
+        <tr class="text-left text-xs uppercase tracking-wider text-slate-500">
+          <th class="pb-2 pr-4 font-medium">Indicador</th>
+          <th class="pb-2 pr-4 font-medium">Valor</th>
+          <th class="pb-2 pr-4 font-medium">Estado</th>
+          <th class="pb-2 pr-4 font-medium">Unidad</th>
+          <th class="pb-2 font-medium">Fecha</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-800/70">
+        <% @readings.each do |reading| %>
+          <tr>
+            <td class="py-2.5 pr-4 text-slate-300"><%= reading.indicator_label %></td>
+            <td class="py-2.5 pr-4 font-medium text-slate-100"><%= reading.value %></td>
+            <td class="py-2.5 pr-4">
+              <span class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-semibold uppercase <%= status_pill[reading.status] %>">
+                <span class="h-1.5 w-1.5 rounded-full <%= status_dot[reading.status] %>"></span><%= reading.status %>
+              </span>
+            </td>
+            <td class="py-2.5 pr-4 text-slate-400"><%= reading.unit %></td>
+            <td class="py-2.5 text-slate-400"><%= reading.measured_at.strftime("%d/%m/%Y %H:%M") %></td>
+          </tr>
+        <% end %>
+        <% if @readings.empty? %>
+          <tr><td colspan="5" class="py-6 text-center text-slate-500">Sin mediciones todavía.</td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

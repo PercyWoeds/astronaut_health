@@ -1,0 +1,65 @@
+<%# Panel de los 5 peligros del NASA Human Research Program.
+    Se renderiza inicialmente en servidor con HrpRiskPanel y se refresca en
+    vivo vía /api/hrp_risks cuando llega una medición nueva.
+    Locals: risks (Array de Hash con key/name/icon/value_label/detail/status/progress). %>
+<% bar_classes = {
+  "green" => "bg-emerald-400",
+  "yellow" => "bg-amber-400",
+  "red" => "bg-rose-400",
+  "unknown" => "bg-slate-500"
+} %>
+<% badge_classes = {
+  "green" => "bg-emerald-500/15 text-emerald-300 border-emerald-500/40",
+  "yellow" => "bg-amber-500/15 text-amber-300 border-amber-500/40",
+  "red" => "bg-rose-500/15 text-rose-300 border-rose-500/40",
+  "unknown" => "bg-slate-500/15 text-slate-300 border-slate-500/40"
+} %>
+
+<div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl">
+  <div class="flex items-start justify-between gap-3">
+    <div>
+      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">NASA HRP</p>
+      <h2 class="mt-1 text-lg font-semibold text-white">Riesgos de Misión</h2>
+    </div>
+    <span class="inline-flex items-center rounded-full border border-cyan-500/40 bg-cyan-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-cyan-200">
+      5 peligros
+    </span>
+  </div>
+
+  <p class="mt-1 text-sm text-slate-400">
+    Los cinco peligros del Human Research Program y su estado actual en esta misión.
+  </p>
+
+  <div class="mt-4 space-y-2.5">
+    <% risks.each do |risk| %>
+      <% status = risk[:status].to_s %>
+      <div data-hrp-risk="<%= risk[:key] %>"
+           class="rounded-xl border border-slate-800 bg-slate-950/50 p-3">
+        <div class="flex items-center justify-between gap-3">
+          <p class="flex items-center gap-2 text-sm font-medium text-slate-200">
+            <span aria-hidden="true"><%= risk[:icon] %></span><%= risk[:name] %>
+          </p>
+          <span data-hrp-badge
+                class="inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase <%= badge_classes[status] || badge_classes["unknown"] %>">
+            <%= status_label_es(status) %>
+          </span>
+        </div>
+
+        <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-800">
+          <div data-hrp-bar
+               class="h-full rounded-full transition-[width] duration-500 ease-out <%= bar_classes[status] || bar_classes["unknown"] %>"
+               style="width: <%= risk[:progress] %>%"></div>
+        </div>
+
+        <div class="mt-1.5 flex items-center justify-between gap-3 text-[11px] text-slate-400">
+          <span data-hrp-value class="font-medium text-slate-300"><%= risk[:value_label] %></span>
+          <span data-hrp-detail class="truncate text-right"><%= risk[:detail] %></span>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <p class="mt-3 text-[11px] leading-relaxed text-slate-500">
+    Radiación y retardo de señal son valores simulados de misión; el resto se calcula con las últimas mediciones del astronauta.
+  </p>
+</div>

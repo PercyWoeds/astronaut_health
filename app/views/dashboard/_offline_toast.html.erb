@@ -1,0 +1,7 @@
+<%# Toast independiente para avisos de enlace/offline. Se sitúa abajo a la
+    izquierda para no solaparse con el toast de mediciones (abajo a la derecha). %>
+<div data-offline-target="toast"
+     class="pointer-events-none fixed bottom-6 left-6 z-[60] hidden max-w-sm rounded-2xl border border-amber-500/40 bg-amber-500/15 px-4 py-3 text-sm text-amber-100 shadow-2xl backdrop-blur">
+  <p data-offline-target="toastTitle" class="font-semibold"></p>
+  <p data-offline-target="toastBody" class="mt-0.5 text-xs text-amber-100/80"></p>
+</div>

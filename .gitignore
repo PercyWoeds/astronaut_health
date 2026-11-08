@@ -1,0 +1,47 @@
+# Ignore bundler config.
+/.bundle
+
+# Ignore all environment files. Keep the template.
+/.env
+/.env.*
+!/.env.example
+
+# Ignore Rails secrets and generated credentials keys.
+/config/master.key
+/config/credentials/*.key
+
+# Ignore node and frontend build output.
+/node_modules
+/dist
+/build
+
+# Ignore logs, temp files and local storage.
+/log/*
+/tmp/*
+!/log/.keep
+!/tmp/.keep
+/tmp/pids/*
+!/tmp/pids/.keep
+/tmp/storage/*
+!/tmp/storage/.keep
+/storage/*
+!/storage/.keep
+
+# Ignore generated assets and precompiled public assets.
+/app/assets/builds/*
+!/app/assets/builds/.keep
+/public/assets
+
+# Ignore local databases and dumps.
+/db/*.sqlite3
+/db/*.sqlite3-journal
+/db/*.dump
+
+# Ignore OS and editor files.
+.DS_Store
+*.swp
+*~
+
+# Ignore local deployment configuration.
+/.kamal
+/config/deploy*.yml
