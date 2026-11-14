@@ -24,4 +24,10 @@ module ApplicationHelper
 
     "Hace #{hours / 24} d"
   end
+
+  # Estilo común de la barra de acciones rápidas (Mission Control).
+  def quick_action_button_classes
+    "rounded-xl border border-slate-700 bg-gray-800 px-4 py-2.5 font-mono text-sm font-semibold " \
+      "text-slate-200 transition hover:border-cyan-500 hover:text-white"
+  end
 end

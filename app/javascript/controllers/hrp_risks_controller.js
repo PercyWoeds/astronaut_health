@@ -60,6 +60,9 @@ export default class extends Controller {
     const badge = row.querySelector("[data-hrp-badge]")
     const value = row.querySelector("[data-hrp-value]")
     const detail = row.querySelector("[data-hrp-detail]")
+    const note = row.querySelector("[data-hrp-note]")
+    const noteRow = row.querySelector("[data-hrp-note-row]")
+    const hasHint = !!row.querySelector("[data-hrp-hint]")
 
     if (bar) {
       bar.style.width = `${risk.progress}%`
@@ -75,5 +78,8 @@ export default class extends Controller {
 
     if (value) value.textContent = risk.value_label
     if (detail) detail.textContent = risk.detail
+
+    if (note) note.textContent = risk.note || ""
+    if (noteRow) noteRow.classList.toggle("hidden", !risk.note && !hasHint)
   }
 }

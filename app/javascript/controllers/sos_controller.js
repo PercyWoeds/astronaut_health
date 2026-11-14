@@ -9,7 +9,7 @@ import { Controller } from "@hotwired/stimulus"
 const DURATION = 3000
 
 const START_MESSAGE =
-  "Empaquetando últimos 10 registros médicos... Enviando a Houston vía enlace de alta prioridad..."
+  "Transmitiendo telemetría a Houston... Retraso de 20 min."
 const END_MESSAGE =
   "✅ Mensaje en cola. Retraso estimado: 20 minutos. Mantenga la calma y siga el protocolo."
 
@@ -88,7 +88,7 @@ export default class extends Controller {
   }
 
   finish() {
-    this.stageTarget.textContent = "Transmisión completada"
+    this.stageTarget.textContent = "Transmisión completada · Tempus Pro"
     this.messageTarget.textContent = END_MESSAGE
     this.messageTarget.classList.remove(...MESSAGE_START_CLASSES)
     this.messageTarget.classList.add(...MESSAGE_END_CLASSES)

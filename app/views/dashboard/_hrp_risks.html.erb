@@ -30,6 +30,21 @@
     Los cinco peligros del Human Research Program y su estado actual en esta misión.
   </p>
 
+  <%# Selector de entorno: controla retraso, radiación y protocolo (Stimulus). %>
+  <div class="mt-3 flex items-center gap-2">
+    <label for="environment-select" class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Entorno</label>
+    <select id="environment-select"
+            data-environment-target="select"
+            data-action="change->environment#change"
+            class="rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-100 outline-none focus:border-cyan-500">
+      <% current_environment = @astronaut&.destination.presence || "iss" %>
+      <% environment_labels = { "iss" => "ISS", "moon" => "Moon", "mars" => "Mars" } %>
+      <% Astronaut::DESTINATIONS.each do |key| %>
+        <option value="<%= key %>" <%= "selected" if current_environment == key %>><%= environment_labels.fetch(key, key.capitalize) %></option>
+      <% end %>
+    </select>
+  </div>
+
   <div class="mt-4 space-y-2.5">
     <% risks.each do |risk| %>
       <% status = risk[:status].to_s %>
@@ -55,11 +70,27 @@
           <span data-hrp-value class="font-medium text-slate-300"><%= risk[:value_label] %></span>
           <span data-hrp-detail class="truncate text-right"><%= risk[:detail] %></span>
         </div>
+
+        <div data-hrp-note-row
+             class="mt-1.5 flex items-start gap-1.5 text-[10px] leading-snug text-gray-400 <%= (risk[:note].present? || risk[:hint].present?) ? "" : "hidden" %>">
+          <% if risk[:hint].present? %>
+            <span data-hrp-hint tabindex="0" aria-label="<%= risk[:hint] %>"
+                  class="group relative mt-0.5 inline-flex cursor-help text-cyan-300">
+              ⓘ
+              <span class="pointer-events-none absolute bottom-full left-0 z-30 mb-1 w-60 rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-[10px] leading-snug text-slate-200 opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus:opacity-100">
+                <%= risk[:hint] %>
+              </span>
+            </span>
+          <% end %>
+          <span data-hrp-note><%= risk[:note] %></span>
+        </div>
       </div>
     <% end %>
   </div>
 
   <p class="mt-3 text-[11px] leading-relaxed text-slate-500">
-    Radiación y retardo de señal son valores simulados de misión; el resto se calcula con las últimas mediciones del astronauta.
+    Radiación y retardo de señal son valores simulados de misión. El CO₂ y la pérdida ósea provienen del chequeo diario.
+    La dosis de radiación incluye neutrones medidos por CSA/CANS.
+    <span data-environment-target="delayNote"><%= CommDelay.text_for(@astronaut) if @astronaut %></span>
   </p>
 </div>

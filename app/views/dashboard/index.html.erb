@@ -5,7 +5,7 @@
 } %>
 <% status_dot = { "green" => "bg-emerald-400", "yellow" => "bg-amber-400", "red" => "bg-rose-400" } %>
 <% overall = @snapshot&.dig(:overall_status) || "green" %>
-<% zone_labels = { "head" => "Cabeza", "chest" => "Tórax", "abdomen" => "Abdomen", "limbs" => "Extremidades" } %>
+<% zone_labels = { "head" => "Cabeza", "chest" => "Tórax", "abdomen" => "Abdomen", "limbs" => "Extremidades", "psychological" => "Zona psicológica", "immune" => "Sistema inmune" } %>
 <% alert_zones = Array(@snapshot&.dig(:zones)).select { |zone| zone[:status] == overall } %>
 <% alert_zone_names = alert_zones.map { |zone| zone_labels[zone[:name]] || zone[:name] }.join(", ") %>
 
@@ -15,12 +15,26 @@
 
 <div class="mx-auto max-w-7xl rounded-3xl px-4 py-6 transition-shadow duration-500 lg:px-8"
      data-body-3d-target="alert"
-     data-controller="body-3d health-form health-charts mission-selector offline sos hrp-risks"
+     data-controller="body-3d health-form health-charts mission-selector offline sos hrp-risks environment"
      data-body-3d-url-value="<%= api_health_status_path(mission_id: @current_mission&.id, astronaut_id: @astronaut&.id) %>"
      data-health-form-url-value="<%= health_readings_path(mission_id: @current_mission&.id, astronaut_id: @astronaut&.id) %>"
      data-offline-url-value="<%= health_readings_path(mission_id: @current_mission&.id, astronaut_id: @astronaut&.id) %>"
      data-hrp-risks-url-value="<%= api_hrp_risks_path(mission_id: @current_mission&.id, astronaut_id: @astronaut&.id) %>"
      data-health-charts-url-value="<%= chart_data_api_health_readings_path(mission_id: @current_mission&.id, astronaut_id: @astronaut&.id) %>">
+
+  <%# ---------- Avisos flash ---------- %>
+  <% if notice.present? %>
+    <div class="mb-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200"><%= notice %></div>
+  <% end %>
+  <% if alert.present? %>
+    <div class="mb-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200"><%= alert %></div>
+  <% end %>
+
+  <% if @pending_measurements&.any? %>
+    <div class="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+      Tienes <%= @pending_measurements.size %> mediciones pendientes hoy
+    </div>
+  <% end %>
 
   <%# ---------- Cabecera ---------- %>
   <header class="mb-6 flex flex-col gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl shadow-black/20 sm:flex-row sm:items-center sm:justify-between">
@@ -47,11 +61,6 @@
         ⭐ <span data-body-3d-target="points"><%= @astronaut&.total_points || 0 %></span> pts
       </span>
       <%= render "dashboard/offline_badge" %>
-      <button type="button"
-              data-action="click->health-form#open"
-              class="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-cyan-500/20 transition hover:bg-cyan-400">
-        + Registrar nueva medición
-      </button>
     </div>
   </header>
 
@@ -95,6 +104,22 @@
     <% end %>
   </section>
 
+  <%# ---------- Barra de acciones rápidas NASA HRP / CSA ---------- %>
+  <% if @astronaut %>
+    <section class="mb-5 flex flex-wrap items-center gap-3">
+      <button type="button" data-action="click->health-form#open" class="<%= quick_action_button_classes %>">
+        ➕ Registrar Medición
+      </button>
+      <%= render "dashboard/daily_check_modal" %>
+      <%= render "dashboard/biomarker_modal" %>
+      <%= render "dashboard/journal_modal" %>
+      <%= render "dashboard/research_modal" %>
+      <%= render "dashboard/pre_eva_modal" %>
+      <%= render "dashboard/wellness_modal" %>
+      <%= render "dashboard/reaction_test_modal" %>
+    </section>
+  <% end %>
+
   <%# ---------- Cuerpo 3D + panel lateral ---------- %>
   <section class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_390px]">
     <%# Columna izquierda: modelo 3D + panel de riesgos NASA HRP %>
@@ -121,9 +146,30 @@
         Modelo:
         <a href="https://sketchfab.com/3d-models/ecorche-anatomy-study-e402d3d541eb4b199c57d5410f5d3c57"
            target="_blank" rel="noopener" class="pointer-events-auto hover:text-slate-300">Ecorche - Anatomy study</a>
-        · Beatriz Gómez · CC BY 4.0
+        · Beatriz Gomez Santamaria · CC BY 4.0
       </p>
       <div class="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-slate-950 to-transparent"></div>
+    </div>
+
+    <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl">
+      <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Últimos eventos</p>
+      <ol class="mt-3 grid gap-2 sm:grid-cols-2">
+        <% @recent_readings.first(5).each do |reading| %>
+          <li class="flex items-start gap-2.5 rounded-xl border border-slate-800 bg-slate-950/50 p-2.5">
+            <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full <%= status_dot[reading.status] %>"></span>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-xs font-medium text-slate-300"><%= reading.indicator_label %></p>
+              <p class="mt-0.5 text-[11px] text-slate-400"><%= reading.value %> <%= reading.unit %> · <%= relative_time_es(reading.measured_at) %></p>
+            </div>
+            <span class="inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase <%= status_pill[reading.status] %>">
+              <%= status_label_es(reading.status) %>
+            </span>
+          </li>
+        <% end %>
+        <% if @recent_readings.empty? %>
+          <li class="rounded-xl border border-dashed border-slate-700 p-3 text-xs text-slate-400">Sin eventos recientes.</li>
+        <% end %>
+      </ol>
     </div>
 
     <%= render "dashboard/hrp_risks", risks: @hrp_risks %>
@@ -154,27 +200,81 @@
       </div>
       </div>
 
-      <div class="mt-auto pt-5">
-        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Últimos eventos</p>
-        <ol class="mt-3 space-y-2">
-          <% @recent_readings.first(5).each do |reading| %>
-            <li class="flex items-start gap-2.5 rounded-xl border border-slate-800 bg-slate-950/50 p-2.5">
-              <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full <%= status_dot[reading.status] %>"></span>
-              <div class="min-w-0 flex-1">
-                <p class="truncate text-xs font-medium text-slate-300"><%= reading.indicator_label %></p>
-                <p class="mt-0.5 text-[11px] text-slate-400"><%= reading.value %> <%= reading.unit %> · <%= relative_time_es(reading.measured_at) %></p>
-              </div>
-              <span class="inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase <%= status_pill[reading.status] %>">
-                <%= status_label_es(reading.status) %>
-              </span>
-            </li>
-          <% end %>
-          <% if @recent_readings.empty? %>
-            <li class="rounded-xl border border-dashed border-slate-700 p-3 text-xs text-slate-400">Sin eventos recientes.</li>
-          <% end %>
-        </ol>
+      <%# Protocolo dinámico según el entorno seleccionado (Stimulus environment). %>
+      <div class="mt-4 rounded-xl border border-cyan-900 bg-gray-800 p-3 font-mono">
+        <p class="text-[10px] font-semibold uppercase tracking-wider text-cyan-400">Protocolo de acción</p>
+        <p data-environment-target="protocol" class="mt-1 text-xs text-gray-200">Contact Flight Surgeon</p>
       </div>
+
+      <% if @astronaut %>
+        <div class="mt-5">
+          <%= render "dashboard/symptom_check_card" %>
+        </div>
+      <% end %>
+    <% if @astronaut && @snapshot&.dig(:overall_status) == "red" %>
+        <div class="mt-5 rounded-xl border border-rose-500/40 bg-rose-500/10 p-3">
+          <p class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-rose-300">Estado crítico detectado</p>
+          <%= form_with url: ground_reports_path, method: :post, class: "space-y-2" do |form| %>
+            <%= hidden_field_tag :astronaut_id, @astronaut.id %>
+            <%= hidden_field_tag :summary, "Reporte automático de zona crítica: #{@astronaut.name}" %>
+            <%= form.submit "🚨 Reportar al Cirujano", class: "w-full rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-2 text-sm font-semibold text-rose-200 hover:bg-rose-500/20" %>
+          <% end %>
+          <p class="mt-1 text-[10px] text-slate-400">Crea un informe para el Flight Surgeon cuando la zona está crítica.</p>
+        </div>
+      <% end %>
     </aside>
+  </section>
+
+  <%# ---------- AI Flight Surgeon + Health Score + Clima espacial ---------- %>
+  <% ai_recommendations = @ai_recommendations.presence || [AiFlightSurgeon::NOMINAL_RECOMMENDATION] %>
+  <% health_score = @health_score.to_i %>
+  <% health_score_tone = if health_score > 90
+       "border-emerald-400 text-emerald-300"
+     elsif health_score >= 70
+       "border-amber-400 text-amber-300"
+     else
+       "border-rose-400 text-rose-300"
+     end %>
+  <% solar_events = Array(@space_weather_events) %>
+  <% solar_alert = solar_events.any? %>
+  <section class="mt-5 grid gap-5 md:grid-cols-3">
+    <div class="rounded-2xl border <%= @ai_critical ? "border-rose-500/60" : "border-cyan-900" %> bg-gray-800 p-5 font-mono shadow-xl">
+      <div class="flex items-center justify-between gap-3">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-cyan-300">🧠 AI Flight Surgeon</h2>
+        <span class="text-[10px] uppercase tracking-wider text-gray-500">7-day analysis</span>
+      </div>
+      <ul class="mt-4 space-y-2">
+        <% ai_recommendations.each do |recommendation| %>
+          <li class="rounded-lg border border-gray-700 bg-gray-900 p-2.5 text-xs leading-relaxed text-gray-200">
+            <%= recommendation %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+
+    <div class="rounded-2xl border border-cyan-900 bg-gray-800 p-5 font-mono shadow-xl">
+      <h2 class="text-sm font-semibold uppercase tracking-wider text-cyan-300">🩺 Crew Health Score</h2>
+      <div class="mt-4 flex justify-center">
+        <div class="flex h-32 w-32 items-center justify-center rounded-full border-4 <%= health_score_tone %>">
+          <span class="text-4xl font-bold"><%= health_score %></span>
+        </div>
+      </div>
+      <p class="mt-3 text-center text-[11px] leading-relaxed text-gray-400">
+        Overall health status based on sleep, mood, BP, and radiation.
+      </p>
+    </div>
+
+    <div class="rounded-2xl border <%= solar_alert ? "border-rose-500/60" : "border-cyan-900" %> bg-gray-800 p-5 font-mono shadow-xl">
+      <h2 class="text-sm font-semibold uppercase tracking-wider text-cyan-300">☀️ Space Weather (DONKI)</h2>
+      <% if solar_alert %>
+        <p class="mt-4 text-sm font-semibold text-rose-300">⚠️ Alerta de Partículas Solares</p>
+      <% else %>
+        <p class="mt-4 text-sm font-semibold text-emerald-300">☢️ Clima espacial estable</p>
+      <% end %>
+      <p class="mt-2 text-xs text-gray-400">
+        Eventos detectados (últimos 7 días): <span class="font-bold text-gray-200"><%= solar_events.size %></span>
+      </p>
+    </div>
   </section>
 
   <%# ---------- Gráficas + gamificación ---------- %>
@@ -258,7 +358,12 @@
         <tbody class="divide-y divide-slate-800/70" data-health-charts-target="tableBody">
           <% @recent_readings.each do |reading| %>
             <tr>
-              <td class="py-2.5 pr-4 text-slate-300"><%= reading.indicator_label %></td>
+              <td class="py-2.5 pr-4 text-slate-300">
+                <%= reading.indicator_label %>
+                <% if reading.is_baseline? %>
+                  <span class="ml-1 rounded-full border border-cyan-500/40 bg-cyan-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-cyan-200">pre</span>
+                <% end %>
+              </td>
               <td class="py-2.5 pr-4 font-medium text-slate-100"><%= reading.value %> <span class="text-xs text-slate-500"><%= reading.unit %></span></td>
               <td class="py-2.5 pr-4">
                 <span class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-semibold uppercase <%= status_pill[reading.status] %>">
@@ -320,6 +425,15 @@
           <input type="datetime-local" name="health_reading[measured_at]" id="health_reading_measured_at"
                  class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500">
         </div>
+
+        <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3 hover:border-cyan-500/40">
+          <input type="checkbox" name="health_reading[is_baseline]" value="1"
+                 class="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-900 accent-cyan-500">
+          <span>
+            <span class="block text-sm font-medium text-slate-200">Lectura pre-vuelo (baseline)</span>
+            <span class="block text-[11px] text-slate-500">Guarda este valor como referencia. Si un indicador se desvía &gt; 20 %, se marcará en amarillo.</span>
+          </span>
+        </label>
 
         <p data-health-form-target="error" class="hidden rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200"></p>
 

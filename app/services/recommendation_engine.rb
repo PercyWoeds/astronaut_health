@@ -38,6 +38,21 @@ class RecommendationEngine
       "green" => "Mantener rutina de contacto con familia y actividades de recuperación.",
       "yellow" => "Programar una conversación con el equipo y una actividad de recuperación. Registrar evolución.",
       "red" => "Riesgo psicosocial elevado: contactar al Flight Surgeon/psicólogo y activar protocolo de apoyo."
+    },
+    "reaction_time" => {
+      "green" => "Rendimiento cognitivo dentro de rango. Repetir el test en el próximo chequeo.",
+      "yellow" => "Fatiga cognitiva detectada. Se recomienda descanso (CIPHER / Spatial Cognition).",
+      "red" => "Fatiga cognitiva marcada: suspender tareas críticas, descansar y repetir el test."
+    },
+    "meals_completed_percent" => {
+      "green" => "Ingesta adecuada. Mantener el plan de comidas de la misión.",
+      "yellow" => "Riesgo de Nutrición Inadecuada. Completar las comidas restantes y registrar la ingesta.",
+      "red" => "Riesgo de Nutrición Inadecuada. Revisar el plan con el equipo y valorar suplementación."
+    },
+    "social_contact_minutes" => {
+      "green" => "Contacto social adecuado. Mantener la rutina de interacción con la tripulación.",
+      "yellow" => "Riesgo de Aislamiento (ARCHeR). Programar contacto con la tripulación y con Tierra.",
+      "red" => "Aislamiento crítico: activar protocolo psicosocial y contacto inmediato con Tierra."
     }
   }.freeze
 
@@ -50,6 +65,14 @@ class RecommendationEngine
   # Devuelve { text:, urgency:, escalate: }.
   # urgency: :routine | :watch | :urgent
   def call
+    if baseline_deviation?
+      return {
+        text: HealthEvaluator::BASELINE_PROTOCOL,
+        urgency: "watch",
+        escalate: false
+      }
+    end
+
     text = RECOMMENDATIONS.dig(reading.indicator_type, reading.status) ||
            "Sin recomendación específica. Registrar y consultar al Flight Surgeon."
 
@@ -58,6 +81,12 @@ class RecommendationEngine
       urgency: { "green" => "routine", "yellow" => "watch", "red" => "urgent" }.fetch(reading.status, "routine"),
       escalate: reading.status == "red"
     }
+  end
+
+  private
+
+  def baseline_deviation?
+    reading.status == "yellow" && HealthEvaluator.new(reading).baseline_deviation?
   end
 
   def self.for(reading)

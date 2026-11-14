@@ -30,7 +30,9 @@ const ZONE_LABELS = {
   head: "Cabeza",
   chest: "Tórax",
   abdomen: "Abdomen",
-  limbs: "Extremidades"
+  limbs: "Extremidades / Huesos",
+  psychological: "Zona psicológica",
+  immune: "Sistema inmune"
 }
 
 const STATUS_LABELS = {
@@ -636,6 +638,7 @@ export default class extends Controller {
         <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase ${statusClass}">${this.escape(STATUS_LABELS[status] || status)}</span>
       </div>
       <p class="mt-3 text-sm leading-relaxed text-slate-300">${this.escape(zone.description || "")}</p>
+      ${zone.note ? `<p class="mt-2 rounded-lg border border-cyan-500/20 bg-cyan-500/5 px-2.5 py-2 text-[11px] leading-relaxed text-cyan-100/90">${this.escape(zone.note)}</p>` : ""}
       <div class="mt-4 space-y-2">
         ${rows || '<p class="rounded-xl border border-dashed border-slate-700 p-3 text-sm text-slate-400">Sin mediciones para esta zona.</p>'}
       </div>

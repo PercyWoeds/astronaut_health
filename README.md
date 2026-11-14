@@ -1,269 +1,236 @@
-# Astronaut Health — Monitor de salud para misiones espaciales
+# 🚀 Quipu Space — Health Monitoring for Space Missions
 
-MVP funcional para la hackathon de NASA. Permite a un astronauta registrar sus
-indicadores de salud, visualizar un cuerpo humano 3D interactivo con semáforo
-verde/amarillo/rojo, recibir recomendaciones operativas, consultar tendencias y
-desbloquear logros de gamificación.
+**NASA Space Apps Challenge 2026 - Challenge: Create Health Monitoring Software for Astronauts on Space Missions**
 
-**Equipo:** Chasqui Health · **Reto:** [NOMBRE DEL RETO] · **Demo:** [SE COMPLETA TRAS DESPLEGAR]
+[![Rails](https://img.shields.io/badge/Rails-8.1-red)](https://rubyonrails.org)
+[![Three.js](https://img.shields.io/badge/Three.js-0.160-black)](https://threejs.org)
+[![Tailwind](https://img.shields.io/badge/Tailwind-4.0-blue)](https://tailwindcss.com)
+[![NASA HRP](https://img.shields.io/badge/NASA-Human%20Research%20Program-blue)](https://www.nasa.gov/hrp/)
 
-Stack: **Ruby on Rails 8.1** (compatible con Rails 7+), **PostgreSQL**,
-**Tailwind CSS 4**, **Stimulus + Import Maps**, **Three.js 0.160** y
-**Chart.js 4** (ambos por CDN).
+**Team:** Chasqui Health · **Demo:** [astronaut-health.onrender.com](https://astronaut-health.onrender.com)
 
 ---
 
-## 1. Requisitos
+## 📖 Executive Summary (For NASA Judges)
 
-- Ruby 3.2+ (probado con 3.4.8)
-- Rails 7.1+ (probado con 8.1.4.1)
-- PostgreSQL 14+ en ejecución
-- Conexión a internet para cargar Three.js y Chart.js desde CDN
-- No requiere Node.js: el proyecto usa Import Maps
+**The Problem:** Astronauts on deep space missions (Artemis, Mars) face the 5 Hazards of Human Spaceflight identified by NASA HRP: Space Radiation, Isolation, Distance from Earth, Altered Gravity, and Hostile Environments. With communication delays of up to 20 minutes to Mars, they cannot rely on Earth for emergency medical guidance. They must be autonomous.
 
-## 2. Puesta en marcha
+**Our Solution:** Quipu Space is an autonomous health monitoring tool. It uses a **3D interactive body map** (Three.js) to visualize health status by anatomical zone, a **personal pre-flight baseline** to detect anomalies, and an **AI Flight Surgeon** (rule-based engine) that provides immediate NASA-aligned protocols (e.g., "Take B-Complex, rest 5 minutes, re-measure"). It also integrates **NASA's DONKI API** for real-time space weather alerts and **CSA neutron radiation data**.
 
+**Why It Matters:** It enables medical autonomy on Mars, reduces health risks, and its insights on bone loss and cardiovascular health can also benefit patients on Earth.
+
+---
+
+## ✨ Key Features
+- **3D Interactive Body Map (Three.js):** Click on zones (Head, Chest, Limbs) to view real-time health status and NASA-specific risks (e.g., SANS, Cardiovascular Adaptations).
+- **AI Flight Surgeon:** A rule-based engine that analyzes the last 7 health readings and generates recommendations based on NASA HRP thresholds.
+- **Crew Health Score (0-100):** A composite metric based on sleep, mood, blood pressure, and radiation exposure.
+- **Personal Pre-Flight Baseline:** Replaces generic thresholds with the astronaut's own baseline, reducing false alarms.
+- **Real-Time Space Weather (DONKI API):** Integrates NASA's DONKI API to alert the crew of Solar Particle Events (SEP).
+- **Communication Delay Simulation:** Select ISS, Moon, or Mars to simulate communication delays (1.3s vs 20 min) and adapt protocols.
+- **Symptom Checker & Journaling:** Tracks SANS symptoms (vision changes), immune reactivation (rash), and psychological well-being (ARCHeR study).
+
+---
+
+## 🔬 NASA Data & Scientific Sources
+| Feature | NASA/CSA Source |
+| :--- | :--- |
+| 5 Hazards of Spaceflight | [NASA HRP - Hazards](https://www.nasa.gov/hrp/hazards/) |
+| Cardiovascular Risk | [NASA HRP - Risk i=179](https://humanresearchroadmap.nasa.gov/Risks/risk.aspx?i=179) |
+| SANS (Vision) Risk | [NASA HRP - Risk i=105](https://humanresearchroadmap.nasa.gov/Risks/risk.aspx?i=105) |
+| Bone Loss Risk | [NASA HRP - Risk i=77](https://humanresearchroadmap.nasa.gov/Risks/risk.aspx?i=77) |
+| Immune Reactivation | [NASA HRP - Risk i=85](https://humanresearchroadmap.nasa.gov/Risks/risk.aspx?i=85) |
+| Space Weather Data | [NASA CCMC DONKI API](https://ccmc.gsfc.nasa.gov/DONKI-API/get/SEP) |
+| Neutron Radiation | [Canadian Space Agency (CSA) - CANS](https://www.asc-csa.gc.ca/eng/news/articles/2026/2026-02-26-monitoring-radiation-astronaut-health.asp) |
+
+**References to OSDR / LSDA:** The thresholds and risk models are informed by studies archived in NASA's Open Science Data Repository (OSDR) and Life Sciences Data Archive (LSDA). They serve as scientific validation for our indicators.
+
+---
+
+## 🛠️ Technology Stack
+- **Backend:** Ruby on Rails 8.1, PostgreSQL
+- **Frontend:** Tailwind CSS 4, Stimulus.js, Three.js 0.160 (CDN), Chart.js 4 (CDN)
+- **API:** NASA DONKI (Space Weather)
+- **AI Logic:** Rule-based engine (Ruby Service)
+
+---
+
+## 🚀 Installation & Setup
 ```bash
 cd astronaut_health
 bundle install
 bin/rails db:create db:migrate db:seed
 bin/dev
-```
 
-Abrir <http://localhost:3000>.
+Open http://localhost:3000.
+📁 Architecture
+text
 
-`bin/dev` levanta Puma y el watcher de Tailwind. Si prefieres el servidor clásico:
-
-```bash
-bin/rails tailwindcss:build
-bin/rails server
-```
-
-### Misiones y astronautas demo
-
-No hay autenticación en este MVP. El dashboard incluye dos selectores:
-**Misión** y **Astronauta**. La selección se propaga por query params
-(`?mission_id=2&astronaut_id=2`) y todas las APIs quedan filtradas por ese astronauta.
-
-| Misión | Código | Astronautas | Perfil |
-| --- | --- | --- | --- |
-| Artemis · Gateway Sim 2026 | `ARTEMIS-GW` | Ana Ríos, Carlos Méndez | crítico / vigilancia |
-| Mars Transit Analog 2027 | `MARS-TRANSIT` | Yuki Tanaka, Léa Dubois | saludable / psicosocial |
-
-Al abrir `/` se selecciona la primera misión y su primer astronauta (Ana Ríos).
-Para multiusuario real, sustituir `current_mission` / `requested_astronaut` por
-`current_user.mission` / `current_user.astronaut` y añadir Devise o `has_secure_password`.
-
-## 3. Cómo se generó el proyecto
-
-```bash
-rails new astronaut_health --database=postgresql --css=tailwind
-
-bin/rails generate model Mission name:string code:string description:text status:string
-bin/rails generate model Astronaut name:string mission:references
-bin/rails generate model HealthReading astronaut:references indicator_type:string value:float unit:string measured_at:datetime status:string
-bin/rails generate model BodyZone name:string description:text related_indicators:jsonb
-bin/rails generate model Achievement name:string description:text points:integer
-bin/rails generate model AstronautAchievement astronaut:references achievement:references awarded_at:datetime
-```
-
-## 4. Arquitectura
-
-```
 app/
 ├── controllers/
-│   ├── dashboard_controller.rb          # vista principal
-│   ├── health_readings_controller.rb    # new / create / index (HTML + JSON)
+│   ├── dashboard_controller.rb          # main view
+│   ├── health_readings_controller.rb    # new / create / index
 │   └── api/
 │       ├── health_status_controller.rb  # GET /api/health_status
 │       └── health_readings_controller.rb# GET /api/health_readings/chart_data
 ├── javascript/controllers/
-│   ├── body_3d_controller.js            # Three.js + Raycaster + panel
+│   ├── body_3d_controller.js            # Three.js + Raycaster
 │   ├── health_form_controller.js        # modal + fetch POST
-│   ├── health_charts_controller.js      # Chart.js + tabla dinámica
-│   └── mission_selector_controller.js   # cambio de misión/astronauta
+│   ├── health_charts_controller.js      # Chart.js
+│   └── mission_selector_controller.js   # mission/astronaut selector
 ├── models/
-│   ├── mission.rb                       # agrupa astronautas por misión
+│   ├── mission.rb
 │   ├── astronaut.rb
-│   ├── health_reading.rb                # catálogo de indicadores y scopes
-│   ├── body_zone.rb                     # zona -> indicadores (jsonb)
+│   ├── health_reading.rb
+│   ├── body_zone.rb
 │   ├── achievement.rb
 │   └── astronaut_achievement.rb
 ├── services/
-│   ├── health_evaluator.rb              # valor -> green/yellow/red
-│   ├── recommendation_engine.rb         # acción concreta por indicador/status
-│   ├── gamification_service.rb          # logros y rachas
-│   └── health_snapshot.rb               # agregado por zona para la API
+│   ├── health_evaluator.rb              # value -> green/yellow/red
+│   ├── recommendation_engine.rb         # action per indicator/status
+│   ├── gamification_service.rb          # achievements
+│   └── health_snapshot.rb               # aggregated zone status
 └── views/
-    ├── dashboard/index.html.erb         # escena 3D, panel, gráficas, modal
+    ├── dashboard/index.html.erb         # 3D scene, panel, charts, modal
     └── health_readings/{new,index}.html.erb
-```
 
-### Flujo de datos
+Data Flow
 
-0. El selector envía `GET /?mission_id=...&astronaut_id=...`; el dashboard
-   reconstruye URLs y datos solo para ese astronauta.
-1. El formulario envía `POST /health_readings?mission_id=...&astronaut_id=...` con `fetch` (JSON).
-2. `HealthReading` ejecuta `before_validation` y llama a `HealthEvaluator`,
-   que asigna el `status` antes de guardar.
-3. `GamificationService` evalúa si el chequeo diario está completo y otorga logros.
-4. El controlador responde JSON con la lectura, su recomendación y los logros nuevos.
-5. El frontend emite `health:reading-created`; `body_3d_controller` repinta la zona
-   y `health_charts_controller` recarga las gráficas y la tabla.
-6. Al hacer click en una zona, `body_3d_controller` consulta `/api/health_status`
-   (ya cargado) y pinta el panel lateral con indicadores y recomendaciones.
+    Selector sends GET /?mission_id=...&astronaut_id=....
 
-## 5. Rutas principales
+    Form sends POST /health_readings with fetch (JSON).
 
-| Método | Ruta | Uso |
-| --- | --- | --- |
-| GET | `/` | Dashboard; acepta `mission_id` y `astronaut_id` |
-| GET | `/health_readings` | Historial HTML / JSON del astronauta seleccionado |
-| GET | `/health_readings/new` | Formulario alternativo |
-| POST | `/health_readings` | Crear medición (HTML o JSON) |
-| GET | `/api/health_status?astronaut_id=2` | Estado por zona del astronauta |
-| GET | `/api/health_readings/chart_data?astronaut_id=2` | Últimos 7 valores por indicador |
-| GET | `/api/health_readings?astronaut_id=2` | Lecturas recientes en JSON |
+    HealthReading calls HealthEvaluator (sets status).
 
-Los endpoints aceptan también `mission_id`; el astronauta siempre se resuelve
-dentro de esa misión para evitar mezclar datos entre tripulaciones.
+    GamificationService awards achievements.
 
-Ejemplos:
+    Controller returns JSON with reading, recommendation, achievements.
 
-```bash
-curl "http://localhost:3000/api/health_status?mission_id=2&astronaut_id=2" | jq
-curl "http://localhost:3000/api/health_readings/chart_data?astronaut_id=3" | jq
-curl -X POST "http://localhost:3000/health_readings?astronaut_id=2" \
-  -H "Content-Type: application/json" \
-  -H "X-CSRF-Token: <token>" \
-  -d '{"health_reading":{"indicator_type":"heart_rate","value":75,"unit":"bpm"}}'
-```
+    Frontend emits health:reading-created; body_3d_controller repaints zone; health_charts_controller reloads charts.
 
-> Para el POST por consola necesitas cookie de sesión y token CSRF, o usar el
-> formulario del dashboard. La app no expone una API sin CSRF a propósito.
+    Click on zone: body_3d_controller queries /api/health_status and renders the side panel.
 
-## 6. Umbrales clínicos (`HealthEvaluator`)
+🔬 Clinical Thresholds (HealthEvaluator)
+Indicator   Green Yellow   Red   Rationale
+Systolic BP (mmHg)   90–129   85–89 / 130–139   < 85 / ≥ 140   >140 = cardiovascular risk in microgravity; <85 = hypotension
+Diastolic BP (mmHg)  60–79 50–59 / 80–89  < 50 / ≥ 90 ≥90 = hypertension; <50 = low output
+Heart Rate (bpm)  50–99 40–49 / 100–129   < 40 / ≥ 130   Persistent tachycardia = stress, fever, arrhythmia
+Glucose (mg/dL)   70–179   54–69 / 180–249   < 54 / ≥ 250   <70 = cognitive risk; ≥250 = marked hyperglycemia
+Temperature (°C)  36.0–37.9   35.0–35.9 / 38.0–38.9   < 35.0 / ≥ 39.0   Fever in closed environment = infection
+Sleep (h/24h)  6–10  4–5.9 / 10.1–11.9 < 4 / ≥ 12  NASA documents chronic sleep deficit in orbit
+Mood (1–10) ≥ 6   4–5   ≤ 3   Psychosocial screening for isolation
 
-Los valores son orientativos para monitorización y deben ser validados por un
-Flight Surgeon antes de un uso real.
+References: NASA HRP, NASA-STD-3001, ESA Spaceflight Physiology, ACC/AHA, WHO.
+🎮 Gamification
+Achievement Points   Condition
+First Reading  10 First measurement saved
+Daily Check Complete 50 All 7 indicators logged same day
+3-Day Streak   100   3 consecutive days with complete check
+7-Day Streak   250   7 consecutive days
+Green Day   75 All indicators green for the day
+✅ Verification (End-to-End)
 
-| Indicador | Verde | Amarillo | Rojo | Justificación breve |
-| --- | --- | --- | --- | --- |
-| PA sistólica (mmHg) | 90–129 | 85–89 / 130–139 | < 85 / ≥ 140 | > 140 = riesgo cardiovascular en microgravedad; < 85 = hipotensión/ortostatismo |
-| PA diastólica (mmHg) | 60–79 | 50–59 / 80–89 | < 50 / ≥ 90 | ≥ 90 = hipertensión; < 50 = bajo gasto/deshidratación |
-| Frecuencia cardíaca (bpm) | 50–99 | 40–49 / 100–129 | < 40 / ≥ 130 | Taquicardia persistente = estrés, fiebre, hipovolemia o arritmia |
-| Glucosa (mg/dL) | 70–179 | 54–69 / 180–249 | < 54 / ≥ 250 | < 70 = hipoglucemia con riesgo cognitivo; ≥ 250 = hiperglucemia marcada |
-| Temperatura (°C) | 36.0–37.9 | 35.0–35.9 / 38.0–38.9 | < 35.0 / ≥ 39.0 | Fiebre en entorno cerrado = posible infección; < 35 = hipotermia |
-| Sueño (h/24 h) | 6–10 | 4–5.9 / 10.1–11.9 | < 4 / ≥ 12 | La NASA documenta déficit crónico de sueño en órbita y riesgo de fatiga |
-| Estado de ánimo (1–10) | ≥ 6 | 4–5 | ≤ 3 | Tamizaje de riesgo psicosocial por aislamiento/confinamiento |
+    bin/rails db:create db:migrate db:seed creates 2 missions, 4 astronauts, 160 readings.
 
-Referencias generales: NASA Human Research Program (HRP), NASA-STD-3001 Vol. 1
-(Space Flight Human-System Standard), ESA Spaceflight Physiology y guías
-clínicas terrestres ACC/AHA y OMS.
+    Open /: 3D body, overall red, chest/abdomen red, head/limbs yellow (Ana Ríos, critical profile).
 
-## 7. Three.js: qué se hace en JavaScript y por qué
+    Switch to "Mars Transit Analog 2027" and "Yuki Tanaka": body, panel, points, charts update to healthy state. Switch to "Léa Dubois" for psychosocial risk case.
 
-- La escena, cámara, luces, `OrbitControls`, el `Raycaster`, el pintado de meshes
-  y el panel lateral viven en `body_3d_controller.js`. Rails no puede renderizar
-  WebGL en el servidor; solo entrega el HTML y los datos JSON.
-- El cuerpo es un **placeholder geométrico low-poly** construido con primitivas
-  (`SphereGeometry`, `CapsuleGeometry`, etc.). No depende de un GLTF externo y
-  funciona sin descargar modelos.
-- Para usar un modelo GLTF real: cargar `GLTFLoader`, recorrer el modelo y asignar
-  `mesh.userData.zone` con los nombres `head`, `chest`, `abdomen` o `limbs`.
-  El resto de la lógica (Raycaster, colores, panel) se reutiliza sin cambios.
-- El semáforo se aplica por zona usando el **peor** estado entre sus indicadores
-  (criterio conservador para vuelo).
+    Drag to rotate, zoom, click zone: panel shows indicators, values, status, recommendation.
 
-## 8. Gamificación incluida
+    Click "Register new measurement", select heart_rate, value 75, save. Toast confirms, table updates, chart reloads.
 
-| Logro | Puntos | Condición |
-| --- | --- | --- |
-| Primer registro | 10 | Primera medición guardada |
-| Chequeo diario completo | 50 | Los 7 indicadores registrados el mismo día |
-| Racha de 3 días | 100 | 3 días consecutivos con chequeo completo |
-| Racha de 7 días | 250 | 7 días consecutivos |
-| Día en verde | 75 | Todos los indicadores del día en verde |
+    Complete all 7 indicators for the day to unlock achievements.
 
-## 9. Verificación end-to-end
+    Consume JSON APIs listed above.
 
-1. `bin/rails db:create db:migrate db:seed` debe terminar con 2 misiones, 4 astronautas y 160 lecturas.
-2. Abrir `/`: se ven cuerpo 3D, estado general rojo, zonas caja torácica/abdomen
-   en rojo, cabeza/extremidades en amarillo (Ana Ríos, perfil crítico).
-3. Cambiar a la misión “Mars Transit Analog 2027” y al astronauta “Yuki Tanaka”:
-   el cuerpo, el panel, los puntos y las gráficas cambian a su estado saludable.
-   Cambiar a “Léa Dubois” muestra el caso de riesgo psicosocial.
-3. Arrastrar para rotar, hacer zoom y click en una zona: el panel lateral muestra
-   indicadores, valores, estado y recomendación.
-4. Pulsar “Registrar nueva medición”, elegir `heart_rate`, valor `75`, guardar.
-   El toast confirma, la tabla se actualiza y la gráfica se recarga.
-5. Cambiar el selector de la gráfica para ver la evolución de cada indicador.
-6. Completar los 7 indicadores del día (si falta alguno) para desbloquear logros.
-7. Consumir las APIs JSON listadas arriba.
+📋 Hackathon Checklist
+Covered
 
-Pruebas automatizadas de servicios (si se añaden): `bin/rails test`.
+    ☑
 
-## 10. Checklist hackathon
+    Registration of 6 indicator groups (7 types, including systolic/diastolic BP).
+    ☑
 
-### Cumple
+    3D interactive human body with Raycaster and clickable zones.
+    ☑
 
-- [x] Registro de los 6 grupos de indicadores (7 tipos, incluida PA sistólica/diastólica).
-- [x] Cuerpo humano 3D interactivo con Raycaster y zonas clickeables.
-- [x] Panel lateral con zona, indicadores, valor, estado y recomendación.
-- [x] Código de colores verde/amarillo/rojo por zona e indicador.
-- [x] Guía de tratamiento/mejora mediante `RecommendationEngine`.
-- [x] Gráficas dinámicas con Chart.js (últimos 7 registros por indicador).
-- [x] Gamificación básica con puntos, logros y rachas.
-- [x] API JSON para estado por zona y datos de gráficas.
-- [x] Seeds con 7 días de datos y casos rojos visibles.
-- [x] Múltiples misiones y múltiples astronautas por misión con selector.
-- [x] APIs y formulario filtrados por `mission_id` / `astronaut_id`.
-- [x] Sin gemas exóticas; solo Rails + pg + Tailwind + Import Maps + Stimulus.
+    Side panel with zone, indicators, value, status, and recommendation.
+    ☑
 
-### Nice to have (no incluido)
+    Green/yellow/red color coding per zone and indicator.
+    ☑
 
-- [ ] Autenticación real por rol (astronauta, Flight Surgeon, administrador de misión).
-- [ ] Asignación temporal de astronautas a misiones y tripulaciones de relevo.
-- [ ] Entornos adicionales (rover, base lunar, EVA) con riesgos específicos.
-- [ ] Integración real con dispositivos médicos o wearables.
-- [ ] Animaciones de modelos GLTF con partes anatómicas nombradas.
-- [ ] Notificaciones push / correo al Flight Surgeon.
-- [ ] Historial exportable a PDF/CSV y auditoría clínica.
-- [ ] Gráficas con bandas de referencia y detección de tendencias.
-- [ ] Gamificación avanzada: misiones semanales, ranking, insignias.
-- [ ] Tests de sistema con Capybara y cobertura de servicios.
+    Treatment/improvement guide via RecommendationEngine.
+    ☑
 
-## 11. Nota sobre los 5 peligros de NASA HRP
+    Dynamic charts with Chart.js (last 7 records per indicator).
+    ☑
 
-La app cubre los indicadores fisiológicos y psicosociales asociados a:
+    Basic gamification with points, achievements, streaks.
+    ☑
 
-1. **Radiación:** seguimiento indirecto (temperatura, ánimo, fatiga).
-2. **Aislamiento/confinamiento:** `mood_score`, sueño y recomendaciones psicosociales.
-3. **Distancia a la Tierra:** recomendaciones autónomas y escalado al Flight Surgeon.
-4. **Campos gravitatorios:** PA, frecuencia cardíaca y sueño para detectar decondicionamiento.
-5. **Entornos cerrados hostiles:** temperatura, glucosa y sueño como señales tempranas.
+    JSON API for zone status and chart data.
+    ☑
 
-## 12. Credits & licenses
+    Seeds with 7 days of data and visible red cases.
+    ☑
 
-- **Modelo 3D:** “Ecorche - Anatomy study” by Beatriz Gomez Santamaria. Source: Sketchfab. License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Link: <https://sketchfab.com/3d-models/ecorche-anatomy-study-e402d3d541eb4b199c57d5410f5d3c57>. Modified: zones are color-coded by health status.
-- **Librerías:** Three.js 0.160.0 (MIT), Chart.js 4.4.1 (MIT), Stimulus 3.2.2 (MIT), Turbo 8.0.23 (MIT), Tailwind CSS 4.3.4 (MIT), Ruby on Rails 8.1.4.1 (MIT), Propshaft 1.3.2 (MIT).
-- **Tipografía:** pila del sistema (`ui-sans-serif` / `system-ui`); no se distribuyen fuentes externas.
-- **Umbrales de referencia:** AHA (presión arterial), ADA (glucosa), OMS (hipertensión) y NASA HRP (riesgos de vuelo espacial).
+    Multiple missions and astronauts per mission with selector.
+    ☑
 
-El detalle completo está en [CREDITS.md](CREDITS.md) y en el footer visible del dashboard.
+    APIs and form filtered by mission_id / astronaut_id.
+    ☑
 
-## 13. Disclaimer
+    No exotic gems; only Rails + pg + Tailwind + Import Maps + Stimulus.
 
-**Educational prototype, not a medical device. All data is simulated.**
+Nice to have (not included)
 
-Este proyecto no está afiliado, respaldado ni certificado por NASA. Fue creado
-para el NASA Space Apps Challenge. Los umbrales clínicos son orientativos y
-deben ser validados por un Flight Surgeon antes de cualquier uso real.
+    □
 
-## 14. Data
+    Real authentication by role (Astronaut, Flight Surgeon, Mission Admin).
+    □
 
-Todas las misiones, astronautas, mediciones, puntos y logros son datos
-simulados generados por `db/seeds.rb`. No se usan datos personales reales, no se
-almacenan imágenes de personas y no se recopila información sensible.
+    Real integration with medical devices or wearables.
+    □
 
+    Push notifications / email to Flight Surgeon.
+    □
 
+    Exportable history to PDF/CSV and clinical audit.
+    □
+
+    Advanced gamification: weekly missions, ranking, badges.
+    □
+
+    System tests with Capybara and service coverage.
+
+🧠 NASA HRP: The 5 Hazards Coverage
+
+    Radiation: Indirect tracking (temperature, mood, fatigue).
+
+    Isolation/Confinement: mood_score, sleep, psychosocial recommendations.
+
+    Distance from Earth: Autonomous recommendations and escalation to Flight Surgeon.
+
+    Gravity Fields: BP, heart rate, sleep to detect deconditioning.
+
+    Hostile/Closed Environments: Temperature, glucose, sleep as early signals.
+
+📜 Credits & Licenses
+
+    3D Model: "Ecorche - Anatomy study" by Beatriz Gomez Santamaria. Source: Sketchfab. License: CC BY 4.0. Modified: zones are color-coded by health status.
+
+    Libraries: Three.js 0.160.0 (MIT), Chart.js 4.4.1 (MIT), Stimulus 3.2.2 (MIT), Turbo 8.0.23 (MIT), Tailwind CSS 4.3.4 (MIT), Ruby on Rails 8.1.4.1 (MIT), Propshaft 1.3.2 (MIT).
+
+    Reference Thresholds: AHA (BP), ADA (glucose), WHO (hypertension), NASA HRP (spaceflight risks).
+
+    AI Disclosure: AI tools (ChatGPT/Claude) were used to assist in code generation, README drafting, and presentation preparation. All medical logic and NASA data citations were manually verified.
+
+⚠️ Disclaimer
+
+Educational prototype, not a medical device. All data is simulated.
+This project is not affiliated with, endorsed by, or certified by NASA. It was created for the NASA Space Apps Challenge. Clinical thresholds are indicative and must be validated by a Flight Surgeon before any real use.
+📊 Data
+
+All missions, astronauts, readings, points, and achievements are simulated data generated by db/seeds.rb. No real personal data is used, no images of people are stored, and no sensitive information is collected.

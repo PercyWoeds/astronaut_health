@@ -1,11 +1,41 @@
 # Construye el estado actual de salud del astronauta listo para serializar.
 # Se usa tanto en el dashboard HTML como en /api/health_status, evitando
 # duplicar la lógica de agregación de zonas y recomendaciones.
+#
+# Fusiona tres fuentes:
+#   - HealthReading: series puntuales de signos vitales.
+#   - DailyCheck: riesgos operativos NASA HRP / CSA.
+#   - ResearchAssessment + PreEvaCheck: estudios Immune, CIPHER, SANS y ARCHeR.
 class HealthSnapshot
-  attr_reader :astronaut
+  ZONE_NOTES = {
+    "limbs" => "Riesgo de osteoporosis acelerada. Los datos de la ISS (CSA) ayudan a prevenir esto en Tierra."
+  }.freeze
+
+  PSYCHOLOGICAL_ZONE = {
+    name: "psychological",
+    description: "Zona psicológica: aislamiento, confinamiento y carga mental durante la misión."
+  }.freeze
+
+  IMMUNE_ZONE = {
+    name: "immune",
+    description: "Sistema inmune y barreras cutáneas: biomarcadores, virus latentes y muestras biológicas."
+  }.freeze
+
+  # Indicadores nuevos que se muestran en zonas existentes aunque la base de
+  # datos ya tuviera los BodyZone creados antes de añadirlos al catálogo.
+  EXTRA_ZONE_INDICATORS = {
+    "head" => %w[reaction_time],
+    "abdomen" => %w[meals_completed_percent]
+  }.freeze
+
+  attr_reader :astronaut, :daily_check, :research_assessment, :symptom_check, :pre_eva_check
 
   def initialize(astronaut)
     @astronaut = astronaut
+    @daily_check = DailyCheck.latest_for(astronaut)
+    @research_assessment = ResearchAssessment.latest_for(astronaut)
+    @symptom_check = SymptomCheck.latest_for(astronaut)
+    @pre_eva_check = astronaut&.pre_eva_checks&.recent_first&.first
   end
 
   def as_json
@@ -13,21 +43,40 @@ class HealthSnapshot
       astronaut: astronaut_payload,
       overall_status: overall_status,
       zones: zones_payload,
+      daily_check: daily_check_payload,
+      research_assessment: research_payload,
+      symptom_check: symptom_check_payload,
       generated_at: Time.current.iso8601
     }
   end
 
   def overall_status
-    read = astronaut.health_readings.recent_first.to_a
-    Array(read).filter_map(&:status).then do |statuses|
-      %w[red yellow green].find { |candidate| statuses.include?(candidate) } || "green"
-    end
+    statuses = astronaut.health_readings.recent_first.to_a.filter_map(&:status)
+    statuses.concat(Array(daily_evaluation&.dig(:zone_statuses)&.values))
+    statuses.concat(Array(research_evaluation&.dig(:zone_statuses)&.values))
+    statuses.concat(Array(symptom_evaluation&.dig(:zone_statuses)&.values))
+    statuses << "red" if research_evaluation&.dig(:systemic_alert)
+    %w[red yellow green].find { |candidate| statuses.include?(candidate) } || "green"
   end
 
   private
 
   def readings_by_type
     @readings_by_type ||= astronaut.latest_readings
+  end
+
+  def daily_evaluation
+    @daily_evaluation ||= daily_check&.evaluation
+  end
+
+  def research_evaluation
+    @research_evaluation ||= if research_assessment || pre_eva_check
+      HealthEvaluator.research_summary(research_assessment, pre_eva_check: pre_eva_check)
+    end
+  end
+
+  def symptom_evaluation
+    @symptom_evaluation ||= symptom_check&.evaluation
   end
 
   def astronaut_payload
@@ -43,27 +92,151 @@ class HealthSnapshot
     }
   end
 
-  def zones_payload
-    BodyZone.order(:id).map do |zone|
-      {
-        name: zone.name,
-        description: zone.description,
-        status: zone.status_for(readings_by_type),
-        indicators: Array(zone.related_indicators).filter_map do |type|
-          reading = readings_by_type[type]
-          next unless reading
+  def daily_check_payload
+    return nil unless daily_check
 
-          {
-            type: reading.indicator_type,
-            label: reading.indicator_label,
-            value: reading.value,
-            unit: reading.unit,
-            status: reading.status,
-            measured_at: reading.measured_at.iso8601,
-            recommendation: RecommendationEngine.for(reading)
-          }
-        end
+    {
+      id: daily_check.id,
+      checked_on: daily_check.checked_on.iso8601,
+      bone_density_loss_percent: daily_check.bone_density_loss_percent,
+      co2_level: daily_check.co2_level,
+      stress_level: daily_check.stress_level,
+      calories_intake: daily_check.calories_intake,
+      vision_blurred: daily_check.vision_blurred,
+      dizziness_reported: daily_check.dizziness_reported,
+      skin_rash: daily_check.skin_rash
+    }
+  end
+
+  def symptom_check_payload
+    return nil unless symptom_check
+
+    {
+      id: symptom_check.id,
+      checked_on: symptom_check.checked_on.iso8601,
+      rash_or_hives: symptom_check.rash_or_hives,
+      vision_changes: symptom_check.vision_changes,
+      dizziness_nausea: symptom_check.dizziness_nausea
+    }
+  end
+
+  def research_payload
+    return nil unless research_assessment
+
+    {
+      id: research_assessment.id,
+      assessed_on: research_assessment.assessed_on.iso8601,
+      saliva_sample_taken: research_assessment.saliva_sample_taken,
+      virus_reactivation_suspected: research_assessment.virus_reactivation_suspected,
+      calcium_isotopes_level: research_assessment.calcium_isotopes_level,
+      telomere_length: research_assessment.telomere_length,
+      spatial_cognition_score: research_assessment.spatial_cognition_score,
+      vestibular_test_passed: research_assessment.vestibular_test_passed,
+      vision_test_performed: research_assessment.vision_test_performed,
+      oct_scan_result: research_assessment.oct_scan_result,
+      b_complex_supplement_taken: research_assessment.b_complex_supplement_taken,
+      actigraphy_device_synced: research_assessment.actigraphy_device_synced,
+      cognitive_performance_survey_score: research_assessment.cognitive_performance_survey_score
+    }
+  end
+
+  def zones_payload
+    zones = BodyZone.order(:id).map do |zone|
+      indicator_types = (Array(zone.related_indicators) + EXTRA_ZONE_INDICATORS.fetch(zone.name, [])).uniq
+      extra_statuses = indicator_types.filter_map { |type| readings_by_type[type]&.status }
+      base_status = HealthEvaluator.worst_status(zone.status_for(readings_by_type), *extra_statuses)
+      build_zone(zone.name, zone.description, indicator_types, base_status: base_status)
+    end
+
+    psychological = psychological_zone_payload
+    zones << psychological if psychological
+
+    immune = immune_zone_payload
+    zones << immune if immune
+
+    zones
+  end
+
+  # Zona psicológica virtual (no tiene mesh propio en el cuerpo 3D).
+  # Se alimenta del estrés (DailyCheck), ARCHeR y contacto social.
+  def psychological_zone_payload
+    daily_status = daily_evaluation&.dig(:zone_statuses, "psychological")
+    research_status = research_evaluation&.dig(:zone_statuses, "psychological")
+    has_reading = %w[mood_score sleep_hours social_contact_minutes].any? { |type| readings_by_type[type] }
+    return nil unless daily_status || research_status || has_reading
+
+    build_zone(
+      PSYCHOLOGICAL_ZONE[:name],
+      PSYCHOLOGICAL_ZONE[:description],
+      %w[mood_score sleep_hours social_contact_minutes],
+      base_status: nil
+    )
+  end
+
+  # Zona inmune virtual: piel/sistema, virus latentes y biomarcadores.
+  def immune_zone_payload
+    return nil unless research_assessment || symptom_check
+
+    build_zone(IMMUNE_ZONE[:name], IMMUNE_ZONE[:description], [], base_status: nil)
+  end
+
+  def build_zone(name, description, indicator_types, base_status:)
+    readings = indicator_types.filter_map do |type|
+      reading = readings_by_type[type]
+      next unless reading
+
+      {
+        type: reading.indicator_type,
+        label: reading.indicator_label,
+        value: reading.value,
+        unit: reading.unit,
+        status: reading.status,
+        measured_at: reading.measured_at.iso8601,
+        recommendation: RecommendationEngine.for(reading)
       }
     end
+
+    daily_indicators = Array(daily_evaluation&.dig(:zone_indicators, name))
+    research_indicators = Array(research_evaluation&.dig(:zone_indicators, name))
+    symptom_indicators = Array(symptom_evaluation&.dig(:zone_indicators, name))
+    daily_status = daily_evaluation&.dig(:zone_statuses, name)
+    research_status = research_evaluation&.dig(:zone_statuses, name)
+    symptom_status = symptom_evaluation&.dig(:zone_statuses, name)
+    systemic_alert = research_evaluation&.dig(:systemic_alert)
+
+    status = HealthEvaluator.worst_status(base_status, daily_status, research_status, symptom_status)
+    status = "red" if systemic_alert
+
+    note_parts = [ ZONE_NOTES[name], research_evaluation&.dig(:notes, name) ]
+    note_parts << research_evaluation&.dig(:notes, :all) if systemic_alert
+
+    indicators = readings + daily_indicators + research_indicators + symptom_indicators
+    indicators << systemic_indicator if systemic_alert
+
+    {
+      name: name,
+      description: description,
+      status: status,
+      note: note_parts.compact.uniq.join(" ").presence,
+      indicators: indicators
+    }
+  end
+
+  # Alerta inmune que se replica en todas las zonas: el protocolo indica
+  # aislamiento y notificación inmediata a Houston.
+  def systemic_indicator
+    @systemic_indicator ||= {
+      type: "systemic_immune_alert",
+      label: "Alerta inmune sistémica",
+      value: "Virus latente sospechado",
+      unit: "",
+      status: "red",
+      measured_at: (research_assessment&.assessed_on&.to_time || Time.current).iso8601,
+      recommendation: {
+        text: HealthEvaluator::IMMUNE_PROTOCOL,
+        urgency: "urgent",
+        escalate: true
+      }
+    }
   end
 end

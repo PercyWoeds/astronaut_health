@@ -32,7 +32,12 @@
       <tbody class="divide-y divide-slate-800/70">
         <% @readings.each do |reading| %>
           <tr>
-            <td class="py-2.5 pr-4 text-slate-300"><%= reading.indicator_label %></td>
+            <td class="py-2.5 pr-4 text-slate-300">
+              <%= reading.indicator_label %>
+              <% if reading.is_baseline? %>
+                <span class="ml-1 rounded-full border border-cyan-500/40 bg-cyan-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-cyan-200">pre</span>
+              <% end %>
+            </td>
             <td class="py-2.5 pr-4 font-medium text-slate-100"><%= reading.value %></td>
             <td class="py-2.5 pr-4">
               <span class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-semibold uppercase <%= status_pill[reading.status] %>">

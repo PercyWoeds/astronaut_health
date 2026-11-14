@@ -74,7 +74,10 @@ class HealthReadingsController < ApplicationController
   end
 
   def reading_params
-    params.require(:health_reading).permit(:indicator_type, :value, :unit, :measured_at)
+    params.require(:health_reading).permit(
+      :indicator_type, :value, :unit, :measured_at, :is_baseline,
+      :reaction_time_ms, :meals_completed_percent, :social_contact_minutes
+    )
   end
 
   def reading_payload(reading)
