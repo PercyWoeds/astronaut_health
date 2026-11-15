@@ -12,10 +12,12 @@
 class HrpRiskPanel
   # Valores simulados de la misión. Ajústalos si quieres contar otra historia
   # en la demo (por ejemplo, una tormenta solar durante la presentación).
-  # El límite de 150 mSv es una referencia simulada: no proviene de una norma
-  # NASA citable, se marca como tal en la UI.
+  # NASA-STD-3001 career radiation exposure limit for the whole body (600 mSv).
+  # Source: NASA Office of the Chief Health and Medical Officer, "NASA Space
+  # Flight Human-System Standard" overview (Sept 2021), slide on radiation limits.
   RADIATION_DOSE_MSV = 18.6
-  RADIATION_LIMIT_MSV = 150.0
+  RADIATION_LIMIT_MSV = 600.0
+  RADIATION_LIMIT_SOURCE = "https://www.nasa.gov/sites/default/files/atoms/files/ochmo_standards_overview_sept_15_2021_francisco.pdf"
   NEUTRON_SHARE_PERCENT = 30
   # 40 min de retardo se considera el límite de confort operativo de la demo.
   SIGNAL_DELAY_COMFORT_MINUTES = 40
@@ -46,7 +48,7 @@ class HrpRiskPanel
   end
 
   # 1. Radiación: sin sensor real en el MVP, se simula dosis acumulada.
-  # CSA: ~30% de la dosis en la ISS corresponde a neutrones.
+  # CSA: ~30% de la dosis en la ISS corresponde a neutrones (estimación).
   def radiation_risk
     ratio = RADIATION_DOSE_MSV / RADIATION_LIMIT_MSV
     {
@@ -54,9 +56,9 @@ class HrpRiskPanel
       name: "Radiation",
       icon: "☢️",
       value_label: "#{format_number(RADIATION_DOSE_MSV)} mSv",
-      detail: "Illustrative limit: #{format_number(RADIATION_LIMIT_MSV)} mSv (simulated, no NASA citation)",
-      note: "Estimation: ~#{NEUTRON_SHARE_PERCENT}% of dose are neutrons (CSA).",
-      hint: "About #{NEUTRON_SHARE_PERCENT}% of radiation on the ISS is neutrons (CSA/CANS).",
+      detail: "Career limit: #{format_number(RADIATION_LIMIT_MSV)} mSv (NASA-STD-3001, simulated dose)",
+      note: "Estimation: ~#{NEUTRON_SHARE_PERCENT}% of ISS radiation is neutrons (CSA).",
+      hint: "Simulated accumulated dose. The 600 mSv career limit is from NASA-STD-3001.",
       status: status_for_ratio(ratio, yellow_at: 0.5, red_at: 0.8),
       progress: percent(ratio)
     }
