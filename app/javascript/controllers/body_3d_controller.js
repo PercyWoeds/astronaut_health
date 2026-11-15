@@ -939,6 +939,9 @@ export default class extends Controller {
       const hazardNote = hazardLabels.length
         ? `<p class="mt-1 text-[10px] text-slate-500">HRP hazard: ${this.escape(hazardLabels.join(", "))}</p>`
         : ""
+      const informationalNote = indicator.informational
+        ? `<p class="mt-0.5 text-[10px] text-slate-500">Informational: sleep does not drive severity.</p>`
+        : ""
 
       return `
         <div class="rounded-xl border border-slate-700 bg-slate-950/60 p-3">
@@ -946,7 +949,7 @@ export default class extends Controller {
             <div>
               <p class="text-sm font-medium text-slate-200">${this.escape(indicator.label)}</p>
               <p class="mt-1 text-lg font-semibold text-white">${indicator.value} <span class="text-xs font-normal text-slate-400">${this.escape(indicator.unit)}</span></p>
-              ${baselineNote}
+              ${baselineNote}${informationalNote}
             </div>
             <span class="inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase ${badge}">${this.escape(STATUS_LABELS[indicator.status] || indicator.status)}</span>
           </div>
@@ -960,7 +963,7 @@ export default class extends Controller {
     const normalRow = (indicator) => `
       <div class="flex items-center justify-between gap-2 rounded-lg border border-slate-700 bg-slate-950/40 px-2.5 py-1.5">
         <span class="min-w-0 truncate text-[11px] text-slate-300">${this.escape(indicator.label)}</span>
-        <span class="shrink-0 text-[11px] font-medium text-slate-200">${indicator.value} <span class="text-[10px] font-normal text-slate-500">${this.escape(indicator.unit)}</span></span>
+        <span class="shrink-0 text-[11px] font-medium text-slate-200">${indicator.value} <span class="text-[10px] font-normal text-slate-500">${this.escape(indicator.unit)}</span>${indicator.informational ? ' <span class="text-[10px] font-normal text-slate-500">· informational</span>' : ""}</span>
       </div>
     `
 

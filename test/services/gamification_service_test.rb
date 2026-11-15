@@ -16,10 +16,12 @@ class GamificationServiceTest < ActiveSupport::TestCase
       sleep_hours: 7,
       mood_score: 8
     }.each_with_index do |(type, value), index|
+      measured_at = date.beginning_of_day + 8.hours + index.minutes
+      measured_at = Time.current - 1.minute if measured_at > Time.current
       @astronaut.health_readings.create!(
         indicator_type: type.to_s,
         value: value,
-        measured_at: date.beginning_of_day + 8.hours + index.minutes
+        measured_at: measured_at
       )
     end
   end

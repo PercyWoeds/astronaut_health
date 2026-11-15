@@ -183,4 +183,85 @@ class HealthReadingTest < ActiveSupport::TestCase
     assert_equal %w[mmHg kPa], HealthReading.unit_options_for("blood_pressure_systolic")
     assert_equal %w[°C °F], HealthReading.unit_options_for("body_temperature")
   end
+
+  test "data origin defaults to manual and accepts the demo values" do
+    reading = build_reading("heart_rate", 72)
+    assert reading.valid?
+    assert_equal "manual", reading.data_origin
+    assert_equal "Manual entry", reading.data_origin_label
+
+    reading = build_reading("heart_rate", 72, data_origin: "simulated")
+    assert reading.valid?
+    assert_equal "Simulated demo value", reading.data_origin_label
+  end
+
+  test "experimental hydration reading requires thirst score" do
+    reading = build_reading("hydration_ml", 2500)
+    assert_not reading.valid?
+    assert_includes reading.errors.full_messages.to_sentence, "Thirst score"
+
+    reading.thirst_score = 4
+    assert reading.valid?
+    assert_equal "Hydration (fluid intake)", reading.indicator_label
+    assert_match(/\ALog total fluid intake in mL/, reading.measurement_guide)
+  end
+
+  test "experimental muscle reading is calculated from training minutes" do
+    reading = build_reading(
+      "muscle_performance", nil,
+      resistance_minutes: 25, aerobic_minutes: 30,
+      perceived_exertion: 6, muscle_soreness: 3
+    )
+    assert reading.valid?
+    assert_equal 55.0, reading.value
+    assert_equal "Calculated by the app", reading.data_origin_label if reading.data_origin == "calculated"
+  end
+
+  test "experimental muscle reading requires every training field" do
+    reading = build_reading("muscle_performance", nil, resistance_minutes: 25)
+    assert_not reading.valid?
+    messages = reading.errors.full_messages.to_sentence
+    assert_includes messages, "Aerobic"
+    assert_includes messages, "Perceived exertion"
+    assert_includes messages, "Muscle soreness"
+  end
+
+  test "external load forces device-recorded origin and must be complete" do
+    reading = build_reading(
+      "muscle_performance", 50,
+      resistance_minutes: 20, aerobic_minutes: 30,
+      perceived_exertion: 6, muscle_soreness: 3,
+      external_load_kg: 40
+    )
+    assert_not reading.valid?
+    assert_includes reading.errors.full_messages.to_sentence, "External load and reps"
+
+    reading.external_reps = 12
+    assert reading.valid?
+    assert_equal "device-recorded", reading.data_origin
+  end
+
+  test "balance reading rejects unsafe tests and missing fields" do
+    reading = build_reading("balance", 0, balance_episodes: 2, balance_test_performed: true)
+    assert_not reading.valid?
+    messages = reading.errors.full_messages.to_sentence
+    assert_includes messages, "support"
+    assert_includes messages, "environment"
+
+    reading.balance_test_performed = false
+    reading.balance_episodes = 3
+    reading.balance_environment = "earth"
+    assert reading.valid?
+
+    reading.balance_test_performed = true
+    reading.balance_test_supported = true
+    reading.balance_environment = "moon"
+    assert_not reading.valid?
+    assert_includes reading.errors.full_messages.to_sentence, "reduced gravity"
+
+    reading.balance_environment = "earth"
+    reading.value = 4
+    assert_not reading.valid?
+    assert_includes reading.errors.full_messages.to_sentence, "symptoms"
+  end
 end

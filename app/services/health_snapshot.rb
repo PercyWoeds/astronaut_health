@@ -63,7 +63,9 @@ class HealthSnapshot
   end
 
   def overall_status
-    statuses = astronaut.health_readings.recent_first.to_a.filter_map(&:status)
+    statuses = astronaut.health_readings.recent_first.to_a
+      .reject { |reading| HealthEvaluator::SEVERITY_EXEMPT.include?(reading.indicator_type) }
+      .filter_map(&:status)
     statuses.concat(Array(daily_evaluation&.dig(:zone_statuses)&.values))
     statuses.concat(Array(research_evaluation&.dig(:zone_statuses)&.values))
     statuses.concat(Array(symptom_evaluation&.dig(:zone_statuses)&.values))

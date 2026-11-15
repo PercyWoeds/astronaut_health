@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_14_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_14_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -131,6 +131,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_14_140000) do
     t.integer "meals_completed_percent"
     t.integer "social_contact_minutes"
     t.boolean "confirmed", default: false, null: false
+    t.string "data_origin", default: "manual", null: false
+    t.integer "thirst_score"
+    t.integer "resistance_minutes"
+    t.integer "aerobic_minutes"
+    t.integer "perceived_exertion"
+    t.integer "muscle_soreness"
+    t.float "external_load_kg"
+    t.integer "external_reps"
+    t.integer "balance_episodes"
+    t.boolean "balance_test_performed", default: false, null: false
+    t.boolean "balance_test_supported", default: false, null: false
+    t.string "balance_environment"
     t.index ["astronaut_id", "indicator_type", "is_baseline"], name: "idx_readings_baseline_lookup"
     t.index ["astronaut_id", "indicator_type", "measured_at"], name: "idx_readings_by_astro_indicator_time"
     t.index ["astronaut_id"], name: "index_health_readings_on_astronaut_id"

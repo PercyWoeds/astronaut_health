@@ -176,6 +176,9 @@ class HealthEvaluator
     Array(keys).map { |key| HRP_HAZARDS.fetch(key.to_s, key.to_s.humanize) }
   end
 
+  # El sueño es información de contexto: no escala la severidad de la app.
+  SEVERITY_EXEMPT = %w[sleep_hours].freeze
+
   BASELINE_DEVIATION_PERCENT = 20
   BASELINE_PROTOCOL = "Deviation from the pre-flight baseline; may reflect adaptation to microgravity."
   CONFIRMED_EXTREME_NOTE = "Confirmed extreme value. Follow the mission medical protocol."

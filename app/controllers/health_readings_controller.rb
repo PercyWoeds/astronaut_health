@@ -113,7 +113,11 @@ class HealthReadingsController < ApplicationController
   def reading_params
     params.require(:health_reading).permit(
       :indicator_type, :value, :unit, :measured_at, :is_baseline, :confirmed,
-      :reaction_time_ms, :meals_completed_percent, :social_contact_minutes
+      :reaction_time_ms, :meals_completed_percent, :social_contact_minutes,
+      :data_origin, :thirst_score, :resistance_minutes, :aerobic_minutes,
+      :perceived_exertion, :muscle_soreness, :external_load_kg, :external_reps,
+      :balance_episodes, :balance_test_performed, :balance_test_supported,
+      :balance_environment
     )
   end
 
@@ -128,6 +132,11 @@ class HealthReadingsController < ApplicationController
       confirmed: reading.confirmed?,
       extreme: reading.extreme_value?,
       measured_at: reading.measured_at.iso8601,
+      data_origin: reading.data_origin,
+      data_origin_label: reading.data_origin_label,
+      measurement_guide: reading.measurement_guide,
+      citation: reading.citation,
+      hazards: HealthEvaluator.hazard_labels(HealthEvaluator::HAZARD_LISTS.fetch(reading.indicator_type, [])),
       recommendation: RecommendationEngine.for(reading)
     }
   end

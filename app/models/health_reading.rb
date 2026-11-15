@@ -17,11 +17,46 @@ class HealthReading < ApplicationRecord
     "mood_score"               => { label: "Mood", unit: "1-10", range: 1.0..10.0 },
     "reaction_time"            => { label: "Reaction time", unit: "ms", range: 100.0..2_000.0 },
     "meals_completed_percent"  => { label: "Meals completed %", unit: "%", range: 0.0..100.0 },
-    "social_contact_minutes"   => { label: "Social contact", unit: "min", range: 0.0..1_440.0 }
+    "social_contact_minutes"   => { label: "Social contact", unit: "min", range: 0.0..1_440.0 },
+    "hydration_ml"             => { label: "Hydration (fluid intake)", unit: "mL", range: 0.0..10_000.0, experimental: true },
+    "muscle_performance"       => { label: "Muscle performance (self-check)", unit: "min", range: 0.0..600.0, experimental: true },
+    "balance"                  => { label: "Balance self-check", unit: "0-10", range: 0.0..10.0, experimental: true }
   }.freeze
 
   INDICATOR_TYPES = INDICATORS.keys.freeze
   STATUSES = %w[green yellow red].freeze
+  DATA_ORIGINS = %w[manual device-recorded lab-result simulated calculated].freeze
+  DATA_ORIGIN_LABELS = {
+    "manual" => "Manual entry",
+    "device-recorded" => "Device-recorded",
+    "lab-result" => "Lab result",
+    "simulated" => "Simulated demo value",
+    "calculated" => "Calculated by the app"
+  }.freeze
+
+  EXPERIMENTAL_TYPES = %w[hydration_ml muscle_performance balance].freeze
+
+  GUIDES = {
+    "blood_pressure_systolic" => "Rest 5 min, sit down and measure the same arm. Record systolic and diastolic separately. AHA terrestrial reference; not flight-validated.",
+    "blood_pressure_diastolic" => "Rest 5 min, sit down and measure the same arm. Record diastolic with systolic. AHA terrestrial reference; not flight-validated.",
+    "heart_rate" => "Rest 5 min and count for 60 s or use the mission device. Team-defined operational range.",
+    "blood_glucose" => "Use the mission glucometer. Record mg/dL or mmol/L. ADA terrestrial reference; not flight-validated.",
+    "body_temperature" => "Use the mission thermometer. Record °C or °F. Team-defined operational range.",
+    "sleep_hours" => "Record hours slept in the last 24 h. Sleep is informational and is not a severity indicator.",
+    "mood_score" => "Rate your mood from 1 (worst) to 10 (best). Team-defined screening range.",
+    "reaction_time" => "Use the in-app reaction test or the mission cognitive battery. Team-defined research threshold.",
+    "meals_completed_percent" => "Estimate the percentage of the planned meals you completed.",
+    "social_contact_minutes" => "Log minutes of meaningful contact with the crew or with Earth.",
+    "hydration_ml" => "Log total fluid intake in mL. 2.5 L/day and 0.24 L/h during EVA are crew water supply requirements (OCHMO-TB-027), not a personal clinical target. This app does not diagnose dehydration.",
+    "muscle_performance" => "Log resistance and aerobic minutes, perceived exertion (1-10) and soreness (0-10). Optional external load/reps must come from a device. This is a training-load proxy: the app does not measure strength. IMTP, isokinetic and grip tests require ARED or a dynamometer (NASA NTRS 20230000776).",
+    "balance" => "Log balance episodes and a symptom score (0 best, 10 worst). If you perform a test, use a stable surface and a companion; never in microgravity, immediately after landing, or with discomfort. This is not a validated clinical test. Wood et al. (NTRS 20210017480); Clément et al. 2022 (doi 10.3389/fphys.2022.1029161)."
+  }.freeze
+
+  CITATIONS = {
+    "hydration_ml" => "NASA OCHMO, Water - Human Consumption technical brief (OCHMO-TB-027).",
+    "muscle_performance" => "NASA HRP, Space Physiology / CIPHER (NTRS 20230000776).",
+    "balance" => "Wood et al., NASA JSC sensorimotor research (NTRS 20210017480); Clément et al., Frontiers in Physiology, 2022 (doi 10.3389/fphys.2022.1029161)."
+  }.freeze
 
   # Plausibility limits defined by the Quipu Space team (not a NASA source).
   # They reject capture errors (for example, 370 °C) while still allowing
@@ -36,7 +71,10 @@ class HealthReading < ApplicationRecord
     "mood_score"               => 1.0..10.0,
     "reaction_time"            => 50.0..10_000.0,
     "meals_completed_percent"  => 0.0..100.0,
-    "social_contact_minutes"   => 0.0..1_440.0
+    "social_contact_minutes"   => 0.0..1_440.0,
+    "hydration_ml"             => 0.0..10_000.0,
+    "muscle_performance"       => 0.0..600.0,
+    "balance"                  => 0.0..10.0
   }.freeze
 
   # Extreme-but-possible values that require explicit confirmation.
@@ -48,7 +86,9 @@ class HealthReading < ApplicationRecord
     "blood_glucose"            => { low: 54.0, high: 400.0 },
     "body_temperature"         => { low: 35.0, high: 40.0 },
     "sleep_hours"              => { high: 12.0 },
-    "reaction_time"            => { high: 2_000.0 }
+    "reaction_time"            => { high: 2_000.0 },
+    "hydration_ml"             => { high: 8_000.0 },
+    "muscle_performance"       => { high: 300.0 }
   }.freeze
 
   # Units offered by the form for each indicator. The first unit is canonical.
@@ -62,7 +102,10 @@ class HealthReading < ApplicationRecord
     "mood_score"               => %w[1-10],
     "reaction_time"            => %w[ms],
     "meals_completed_percent"  => %w[%],
-    "social_contact_minutes"   => %w[min]
+    "social_contact_minutes"   => %w[min],
+    "hydration_ml"             => %w[mL],
+    "muscle_performance"       => %w[min],
+    "balance"                  => %w[0-10]
   }.freeze
 
   UNIT_CHOICES = UNIT_OPTIONS.values.flatten.uniq.freeze
@@ -79,12 +122,15 @@ class HealthReading < ApplicationRecord
     "mood_score"               => { "1-10" => 1.0 },
     "reaction_time"            => { "ms" => 1.0 },
     "meals_completed_percent"  => { "%" => 1.0 },
-    "social_contact_minutes"   => { "min" => 1.0 }
+    "social_contact_minutes"   => { "min" => 1.0 },
+    "hydration_ml"             => { "mL" => 1.0 },
+    "muscle_performance"       => { "min" => 1.0 },
+    "balance"                  => { "0-10" => 1.0 }
   }.freeze
 
   # Indicadores obligatorios para considerar completo el chequeo diario.
   # Las métricas de estudios (reacción, comidas, contacto social) son opcionales.
-  DAILY_CHECKUP_INDICATORS = (INDICATOR_TYPES - %w[reaction_time meals_completed_percent social_contact_minutes]).freeze
+  DAILY_CHECKUP_INDICATORS = (INDICATOR_TYPES - %w[reaction_time meals_completed_percent social_contact_minutes] - EXPERIMENTAL_TYPES).freeze
 
   validates :indicator_type, inclusion: { in: INDICATOR_TYPES }
   validates :value, numericality: true
@@ -92,14 +138,28 @@ class HealthReading < ApplicationRecord
   validates :reaction_time_ms, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :meals_completed_percent, numericality: { only_integer: true, in: 0..100 }, allow_nil: true
   validates :social_contact_minutes, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :data_origin, inclusion: { in: DATA_ORIGINS }
+  validates :thirst_score, numericality: { only_integer: true, in: 0..10 }, allow_nil: true
+  validates :resistance_minutes, numericality: { only_integer: true, in: 0..300 }, allow_nil: true
+  validates :aerobic_minutes, numericality: { only_integer: true, in: 0..300 }, allow_nil: true
+  validates :perceived_exertion, numericality: { only_integer: true, in: 1..10 }, allow_nil: true
+  validates :muscle_soreness, numericality: { only_integer: true, in: 0..10 }, allow_nil: true
+  validates :external_load_kg, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 400 }, allow_nil: true
+  validates :external_reps, numericality: { only_integer: true, in: 0..50 }, allow_nil: true
+  validates :balance_episodes, numericality: { only_integer: true, in: 0..50 }, allow_nil: true
+  validates :balance_environment, inclusion: { in: %w[earth moon mars] }, allow_nil: true
   validate :value_within_plausible_range
   validate :unit_compatible_with_indicator
   validate :extreme_value_requires_confirmation
   validate :diastolic_less_than_systolic
   validate :measured_at_not_in_future
+  validate :experimental_fields_are_complete
+  validate :balance_test_is_safe
 
   before_validation :set_defaults
   before_validation :normalize_value_to_canonical_unit
+  before_validation :compute_experimental_value
+  before_validation :mark_device_recorded_external_load
   before_validation :evaluate_status
 
   scope :chronological, -> { order(measured_at: :asc, id: :asc) }
@@ -124,6 +184,22 @@ class HealthReading < ApplicationRecord
 
   def indicator_label
     INDICATORS.dig(indicator_type, :label) || indicator_type
+  end
+
+  def experimental?
+    EXPERIMENTAL_TYPES.include?(indicator_type)
+  end
+
+  def data_origin_label
+    DATA_ORIGIN_LABELS.fetch(data_origin, data_origin)
+  end
+
+  def measurement_guide
+    GUIDES[indicator_type]
+  end
+
+  def citation
+    CITATIONS[indicator_type]
   end
 
   # Nota legible cuando la lectura se marca por desviarse de la baseline
@@ -229,6 +305,55 @@ class HealthReading < ApplicationRecord
   end
 
   private
+
+  def experimental_fields_are_complete
+    case indicator_type
+    when "hydration_ml"
+      errors.add(:thirst_score, "is required to log hydration.") if thirst_score.nil?
+    when "muscle_performance"
+      errors.add(:resistance_minutes, "is required for the training-load proxy.") if resistance_minutes.nil?
+      errors.add(:aerobic_minutes, "is required for the training-load proxy.") if aerobic_minutes.nil?
+      errors.add(:perceived_exertion, "is required (1-10).") if perceived_exertion.nil?
+      errors.add(:muscle_soreness, "is required (0-10).") if muscle_soreness.nil?
+      if external_load_kg.present? ^ external_reps.present?
+        errors.add(:base, "External load and reps must be recorded together, using a device.")
+      end
+    when "balance"
+      errors.add(:balance_episodes, "is required to log balance.") if balance_episodes.nil?
+      errors.add(:balance_environment, "is required (earth, moon or mars).") if balance_environment.blank?
+    end
+  end
+
+  def balance_test_is_safe
+    return unless indicator_type == "balance"
+    return unless balance_test_performed?
+
+    if value.to_f.positive?
+      errors.add(:base, "Do not perform the balance test while you have symptoms. Record only the symptom score.")
+    end
+    unless balance_test_supported?
+      errors.add(:balance_test_supported, "must be confirmed: use a stable surface and a companion.")
+    end
+    if %w[moon mars].include?(balance_environment)
+      errors.add(:balance_test_performed, "is not allowed in reduced gravity. Log symptoms only.")
+    end
+  end
+
+  def compute_experimental_value
+    return unless indicator_type == "muscle_performance"
+    return if resistance_minutes.blank? || aerobic_minutes.blank?
+
+    self.value = resistance_minutes.to_i + aerobic_minutes.to_i
+    self.unit = INDICATORS.dig(indicator_type, :unit)
+  end
+
+  def mark_device_recorded_external_load
+    return unless indicator_type == "muscle_performance"
+    return if external_load_kg.blank? && external_reps.blank?
+    return unless data_origin == "manual"
+
+    self.data_origin = "device-recorded"
+  end
 
   def set_defaults
     self.measured_at ||= Time.current

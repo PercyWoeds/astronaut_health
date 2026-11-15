@@ -239,6 +239,7 @@ astronaut_specs.each do |spec|
       astronaut.health_readings.create!(
         indicator_type: indicator_type,
         value: value,
+        data_origin: "simulated",
         measured_at: measured_at
       )
       created += 1
@@ -251,15 +252,15 @@ astronaut_specs.each do |spec|
   wellness = wellness_profiles.fetch(spec[:profile])
   astronaut.health_readings.create!(
     indicator_type: "meals_completed_percent", value: wellness[:meals_completed_percent],
-    meals_completed_percent: wellness[:meals_completed_percent], measured_at: Time.current
+    meals_completed_percent: wellness[:meals_completed_percent], data_origin: "simulated", measured_at: Time.current
   )
   astronaut.health_readings.create!(
     indicator_type: "social_contact_minutes", value: wellness[:social_contact_minutes],
-    social_contact_minutes: wellness[:social_contact_minutes], measured_at: Time.current
+    social_contact_minutes: wellness[:social_contact_minutes], data_origin: "simulated", measured_at: Time.current
   )
   astronaut.health_readings.create!(
     indicator_type: "reaction_time", value: reaction_profiles.fetch(spec[:profile]),
-    reaction_time_ms: reaction_profiles.fetch(spec[:profile]), measured_at: Time.current
+    reaction_time_ms: reaction_profiles.fetch(spec[:profile]), data_origin: "simulated", measured_at: Time.current
   )
 
   # Evaluación de hoy + una línea base para poder simular el protocolo SANS

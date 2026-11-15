@@ -27,7 +27,11 @@ const ALL_TOAST_CLASSES = Object.values(TOAST_TONES).flat()
 export default class extends Controller {
   static targets = [
     "modal", "form", "indicator", "unit", "value", "valueError", "help", "error",
-    "confirmed", "baseline", "submitButton", "toast", "toastTitle", "toastBody"
+    "confirmed", "baseline", "submitButton", "toast", "toastTitle", "toastBody",
+    "dataOrigin", "experimentalFields", "hydrationFields", "muscleFields", "balanceFields",
+    "thirstScore", "resistanceMinutes", "aerobicMinutes", "perceivedExertion", "muscleSoreness",
+    "externalLoadKg", "externalReps", "balanceEpisodes", "balanceTestPerformed", "balanceTestSupported",
+    "balanceEnvironment", "guideBlock", "guide", "citation"
   ]
   static values = { url: { type: String, default: "/health_readings" } }
 
@@ -96,6 +100,8 @@ export default class extends Controller {
     this.unitTarget.value = canonical
     this.currentUnit = canonical
     this.updateHelp()
+    this.updateExperimentalFields()
+    this.updateGuide()
     this.clearValueError()
   }
 
@@ -116,6 +122,33 @@ export default class extends Controller {
     this.currentUnit = newUnit
     this.updateHelp()
     this.clearValueError()
+  }
+
+  // Layer 1 (experimental): required fields for the selected experimental indicator.
+  validateExperimentalFields() {
+    const indicator = this.indicatorTarget.value
+    if (indicator === "hydration_ml" && !this.hasThirstScoreTarget) return true
+    if (![ "hydration_ml", "muscle_performance", "balance" ].includes(indicator)) return true
+
+    const missing = []
+    if (indicator === "hydration_ml" && !this.valueAsNumber(this.thirstScoreTarget)) missing.push("thirst score")
+    if (indicator === "muscle_performance") {
+      [ this.resistanceMinutesTarget, this.aerobicMinutesTarget, this.perceivedExertionTarget, this.muscleSorenessTarget ]
+        .forEach((target) => { if (!this.valueAsNumber(target)) missing.push("training fields") })
+    }
+    if (indicator === "balance" && !this.valueAsNumber(this.balanceEpisodesTarget)) missing.push("balance episodes")
+
+    if (missing.length) {
+      this.showValueError(`Complete the required experimental fields: ${[ ...new Set(missing) ].join(", ")}.`)
+      return false
+    }
+    return true
+  }
+
+  valueAsNumber(target) {
+    if (!target) return false
+    const raw = target.value
+    return raw !== "" && raw !== null && !Number.isNaN(Number(raw))
   }
 
   canonicalize() {
@@ -183,8 +216,41 @@ export default class extends Controller {
     this.helpTarget.textContent = parts.join(" · ")
   }
 
+  updateExperimentalFields() {
+    if (!this.hasExperimentalFieldsTarget) return
+
+    const indicator = this.indicatorTarget.value
+    const experimental = [ "hydration_ml", "muscle_performance", "balance" ].includes(indicator)
+    this.experimentalFieldsTarget.classList.toggle("hidden", !experimental)
+
+    const panels = {
+      hydration_ml: this.hydrationFieldsTarget,
+      muscle_performance: this.muscleFieldsTarget,
+      balance: this.balanceFieldsTarget
+    }
+    Object.entries(panels).forEach(([type, panel]) => {
+      panel?.classList.toggle("hidden", indicator !== type)
+    })
+  }
+
+  updateGuide() {
+    if (!this.hasGuideBlockTarget) return
+
+    const option = this.indicatorTarget.selectedOptions[0]
+    const guide = option?.dataset.guide || ""
+    const citation = option?.dataset.citation || ""
+
+    this.guideBlockTarget.classList.toggle("hidden", !guide)
+    if (guide) {
+      this.guideTarget.textContent = guide
+      this.citationTarget.textContent = citation
+    }
+  }
+
   // Layer 1: reject impossible values before hitting the server.
   validatePlausibility() {
+    if (!this.validateExperimentalFields()) return false
+
     const option = this.indicatorTarget.selectedOptions[0]
     const raw = parseFloat(this.valueTarget.value)
     if (!option || !Number.isFinite(raw)) return true

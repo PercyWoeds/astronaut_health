@@ -9,7 +9,8 @@ class BodyZone < ApplicationRecord
   # Estado agregado de la zona: el peor status entre sus indicadores.
   # Un solo indicador rojo pinta la zona de rojo (criterio conservador en vuelo).
   def status_for(readings_by_type)
-    statuses = related_indicators.filter_map { |type| readings_by_type[type]&.status }
+    severity_types = related_indicators - HealthEvaluator::SEVERITY_EXEMPT
+    statuses = severity_types.filter_map { |type| readings_by_type[type]&.status }
     return "green" if statuses.empty?
 
     %w[red yellow green].find { |candidate| statuses.include?(candidate) } || "green"
