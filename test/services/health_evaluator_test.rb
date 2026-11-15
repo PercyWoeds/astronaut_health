@@ -102,10 +102,21 @@ class HealthEvaluatorTest < ActiveSupport::TestCase
     assert_equal "red", summary[:zone_statuses]["limbs"]
   end
 
-  test "CO2 escala de amarillo a rojo" do
-    assert_equal "yellow", HealthEvaluator.daily_field_status("co2_level", 1_500)
-    assert_equal "red", HealthEvaluator.daily_field_status("co2_level", 2_100)
-    assert_equal "green", HealthEvaluator.daily_field_status("co2_level", 800)
+  test "CO2 usa los puntos de referencia de la ISS, no el umbral terrestre de cognición" do
+    # 2.3 mmHg (~3,003 ppm) = first reported ISS symptoms.
+    # 3.0 mmHg (~3,913 ppm) = ISS operational limit.
+    # 5.3 mmHg (~6,913 ppm) = NASA 180-day SMAC.
+    assert_equal "green", HealthEvaluator.daily_field_status("co2_level", 2_500)
+    assert_equal "yellow", HealthEvaluator.daily_field_status("co2_level", 3_003)
+    assert_equal "yellow", HealthEvaluator.daily_field_status("co2_level", 3_913)
+    assert_equal "red", HealthEvaluator.daily_field_status("co2_level", 6_914)
+  end
+
+  test "convierte ppm a mmHg con el factor de referencia 1304.34" do
+    assert_in_delta 2.3, HealthEvaluator.ppm_to_mmhg(3_000), 0.01
+    assert_in_delta 3.0, HealthEvaluator.ppm_to_mmhg(3_913), 0.01
+    assert_in_delta 5.3, HealthEvaluator.ppm_to_mmhg(6_913), 0.01
+    assert_equal 3_000, HealthEvaluator.mmhg_to_ppm(2.3)
   end
 
   test "worst_status prioriza rojo sobre amarillo y verde" do

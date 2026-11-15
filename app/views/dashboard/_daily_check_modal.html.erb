@@ -53,7 +53,7 @@
             <%= form.label :co2_level, "Ambient CO₂ (ppm)", class: "mb-1 block text-sm font-medium text-slate-300" %>
             <%= form.number_field :co2_level, min: 0, step: 1, value: @daily_check.co2_level,
                   class: "w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500" %>
-            <p class="mt-1 text-[11px] text-gray-400">Target: &lt; 1,000 ppm · critical &gt; 2,000 ppm (NASA-STD-3001)</p>
+            <p class="mt-1 text-[11px] text-gray-400">Reference: ISS operating limit 3.0 mmHg (~3,913 ppm) · SMAC 180-day 5.3 mmHg (~6,913 ppm) · NASA-STD-3001 — ISS reference points; not for terrestrial use.</p>
           </div>
 
           <div>

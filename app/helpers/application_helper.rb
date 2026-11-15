@@ -3,8 +3,8 @@ module ApplicationHelper
   # renombran), pero los textos visibles se devuelven en inglés.
   STATUS_LABELS = {
     "green" => "Normal",
-    "yellow" => "Watch",
-    "red" => "Critical",
+    "yellow" => "Follow-up",
+    "red" => "Medical evaluation",
     "unknown" => "No data"
   }.freeze
 

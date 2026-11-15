@@ -1,23 +1,18 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Modal SOS: "Solicitar Telemetría Médica Prioritaria".
+// Modal SOS: simulated priority telemedicine link.
 //
 // El botón solo existe en el panel lateral cuando la zona seleccionada está
-// en estado crítico (lo inyecta body_3d_controller). La barra de progreso es
-// simulada y dura 3 segundos, como si se empaquetara y enviara la telemetría
-// a Houston por el enlace de alta prioridad.
+// en estado de evaluación médica (lo inyecta body_3d_controller). La barra de
+// progreso es simulada y dura 3 segundos. No es una integración real.
 const DURATION = 3000
-
-const START_MESSAGE =
-  "Transmitting telemetry to Houston... 20 min delay."
-const END_MESSAGE =
-  "✅ Message queued. Estimated delay: 20 minutes. Stay calm and follow the protocol."
 
 const MESSAGE_START_CLASSES = ["border-rose-500/25", "bg-rose-500/5", "text-rose-100"]
 const MESSAGE_END_CLASSES = ["border-emerald-500/30", "bg-emerald-500/10", "text-emerald-200"]
 
 export default class extends Controller {
   static targets = ["modal", "bar", "message", "stage", "percent"]
+  static values = { delay: { type: String, default: "low-latency link simulated" } }
 
   connect() {
     this.onKeydown = (event) => {
@@ -53,7 +48,8 @@ export default class extends Controller {
     this.barTarget.style.width = "0%"
     this.percentTarget.textContent = "0%"
     this.stageTarget.textContent = "Packaging telemetry…"
-    this.messageTarget.textContent = START_MESSAGE
+    this.messageTarget.textContent =
+      `Simulated link: transmitting telemetry. Reference delay: ${this.delayValue}.`
     this.messageTarget.classList.remove(...MESSAGE_END_CLASSES)
     this.messageTarget.classList.add(...MESSAGE_START_CLASSES)
   }
@@ -88,8 +84,10 @@ export default class extends Controller {
   }
 
   finish() {
-    this.stageTarget.textContent = "Transmission complete · Tempus Pro"
-    this.messageTarget.textContent = END_MESSAGE
+    this.stageTarget.textContent = "Queued locally · simulated link"
+    this.messageTarget.textContent =
+      `Message queued locally (simulated link, not sent). Reference delay: ${this.delayValue}. ` +
+      "Follow the mission medical protocol and use the hardware communication system."
     this.messageTarget.classList.remove(...MESSAGE_START_CLASSES)
     this.messageTarget.classList.add(...MESSAGE_END_CLASSES)
   }

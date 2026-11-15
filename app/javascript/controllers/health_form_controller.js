@@ -363,7 +363,7 @@ export default class extends Controller {
     const reading = data.reading || {}
     const awards = data.awarded_achievements || []
     const warning = data.warning
-    const statusLabel = { green: "Normal", yellow: "Watch", red: "Critical" }[reading.status] || reading.status
+    const statusLabel = { green: "Normal", yellow: "Follow-up", red: "Medical evaluation" }[reading.status] || reading.status
 
     this.toastTitleTarget.textContent = `Measurement saved: ${reading.label || "indicator"} = ${reading.value} ${reading.unit || ""}`
     const achievementText = awards.length

@@ -12,7 +12,7 @@
 <% overall_detail = if overall == "green"
      "All #{all_zones.size} zones normal"
    else
-     "#{alert_zones.size} zone#{'s' unless alert_zones.size == 1} #{overall == 'red' ? 'critical' : 'under watch'}"
+      "#{alert_zones.size} zone#{'s' unless alert_zones.size == 1} #{overall == 'red' ? 'needs medical evaluation' : 'needs follow-up'}"
    end %>
 <% health_score = @health_score.to_i %>
 <% health_score_tone = if health_score > 90
@@ -25,7 +25,7 @@
 <% overall_tone = { "green" => "border-emerald-400 text-emerald-300", "yellow" => "border-amber-400 text-amber-300", "red" => "border-rose-400 text-rose-300" }[overall] %>
 <% solar_events = Array(@space_weather_events) %>
 <% solar_alert = solar_events.any? %>
-<% main_recommendation = @ai_recommendations.first.presence || AiFlightSurgeon::NOMINAL_RECOMMENDATION %>
+<% main_recommendation = @rule_based_recommendations.first.presence || RuleBasedFlightSurgeon::NOMINAL_RECOMMENDATION %>
 
 <% content_for :head do %>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -88,7 +88,7 @@
         Overall status: <span class="font-semibold uppercase"><%= status_label_es(overall) %></span>
         <% if alert_zones.any? && overall != "green" %>
           <span class="text-xs font-normal opacity-80">
-            · <%= overall == "red" ? "critical zones" : "zones under watch" %>: <%= alert_zone_names %>
+            · <%= overall == "red" ? "zones needing medical evaluation" : "zones needing follow-up" %>: <%= alert_zone_names %>
           </span>
         <% end %>
       </span>
@@ -282,8 +282,8 @@
 
           <div class="pointer-events-none absolute bottom-4 left-4 z-10 flex items-center gap-3 rounded-xl border border-slate-700/70 bg-slate-950/70 px-3 py-2 text-xs text-slate-300 backdrop-blur">
             <span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-emerald-400"></span>Normal</span>
-            <span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-amber-400"></span>Watch</span>
-            <span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-rose-400"></span>Critical</span>
+            <span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-amber-400"></span>Follow-up</span>
+            <span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-rose-400"></span>Medical evaluation</span>
           </div>
           <div data-body-3d-target="canvas" class="relative h-[520px] w-full sm:h-[620px]">
             <div data-body-3d-target="loader" class="absolute inset-0 z-10 grid place-items-center bg-slate-950/30">
@@ -305,7 +305,7 @@
         <% severity_rank = { "red" => 0, "yellow" => 1, "green" => 2 } %>
         <% latest_events = @recent_readings.sort_by { |reading| [severity_rank.fetch(reading.status, 3), -reading.measured_at.to_i] }.first(5) %>
         <div class="rounded-2xl border border-slate-700 bg-slate-900/60 p-5 shadow-xl">
-          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Latest events · severity first</p>
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Latest alerts · severity first</p>
           <ol class="mt-3 grid gap-2 sm:grid-cols-2">
             <% latest_events.each do |reading| %>
               <li class="flex items-start gap-2.5 rounded-xl border border-slate-700 bg-slate-950/50 p-2.5">
@@ -370,12 +370,12 @@
           <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Rule-Based Flight Surgeon</p>
           <h2 class="mt-1 text-lg font-semibold text-white">7-day analysis</h2>
         </div>
-        <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider <%= @ai_critical ? "border-rose-500/40 bg-rose-500/10 text-rose-200" : "border-emerald-500/40 bg-emerald-500/10 text-emerald-200" %>">
-          <%= @ai_critical ? "Action required" : "Nominal" %>
+        <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider <%= @rule_based_critical ? "border-rose-500/40 bg-rose-500/10 text-rose-200" : "border-emerald-500/40 bg-emerald-500/10 text-emerald-200" %>">
+          <%= @rule_based_critical ? "Action required" : "Nominal" %>
         </span>
       </div>
       <ul class="mt-4 space-y-2">
-        <% @ai_recommendations.each do |recommendation| %>
+        <% @rule_based_recommendations.each do |recommendation| %>
           <li class="rounded-lg border border-gray-700 bg-gray-900 p-2.5 text-xs leading-relaxed text-gray-200">
             <%= recommendation %>
           </li>

@@ -3,14 +3,23 @@
 # Los umbrales son orientativos para monitorización de astronautas y están basados en:
 #   - NASA Human Research Program (HRP): riesgos cardiovasculares, exposición a microgravedad
 #     y contramedidas durante vuelos de larga duración.
-#   - NASA-STD-3001 (NASA Space Flight Human-System Standard), Vol. 2: límites de salud
-#     (usado como fuente del objetivo de CO₂ del entorno cerrado).
-#   - CSA (Canadian Space Agency): radiación de neutrones (CANS) y pérdida ósea acelerada.
-#   - American Heart Association (AHA): clasificación de presión arterial.
+#   - NASA NTRS / ISS operations: reference points for CO₂ in the closed environment
+#     (2.3 mmHg first reported symptoms, 3.0 mmHg ISS operational limit, 5.3 mmHg
+#     180-day SMAC). These are ISS reference points, not terrestrial targets.
+#   - American Heart Association (AHA): clasificación de presión arterial (terrestrial).
+#   - ADA: glucose guidance (terrestrial).
 #   - ESA Spaceflight Physiology / guías clínicas terrestres (ACC/AHA, OMS) cuando no existe
 #     un estándar específico de vuelo espacial.
 # En un contexto real, un Flight Surgeon debe validar y ajustar estos rangos por misión.
 class HealthEvaluator
+  # CO₂ reference points from the verified source block.
+  CO2_PPM_PER_MMHG = 1304.34
+  CO2_SYMPTOMS_MMHG = 2.3
+  CO2_OPERATING_LIMIT_MMHG = 3.0
+  CO2_SMAC_180D_MMHG = 5.3
+  CO2_REFERENCE_LABEL = "ISS reference points; not for terrestrial use".freeze
+  CO2_SOURCE = "NASA NTRS, CO2 on the International Space Station: An Operations Update " \
+               "(ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/20150019624.pdf); NASA NTRS 20100036637".freeze
   # PRESIÓN ARTERIAL SISTÓLICA (mmHg)
   # Clasificación AHA 2017 (https://www.heart.org/en/health-topics/high-blood-pressure):
   #   Normal < 120 · Elevated 120-129 · Stage 1 130-139 · Stage 2 >= 140 · Crisis >= 180.
@@ -154,8 +163,17 @@ class HealthEvaluator
     when "stress_level"
       numeric_status(value) { |v| v > 7 ? "red" : v > 5 ? "yellow" : "green" }
     when "co2_level"
-      # Source: NASA-STD-3001 Vol. 2 — target < 1,000 ppm; critical > 2,000 ppm.
-      numeric_status(value) { |v| v > 2_000 ? "red" : v > 1_000 ? "yellow" : "green" }
+      # ISS reference points; not for terrestrial use.
+      # 2.3 mmHg = first symptoms reported by ISS crew (~3,003 ppm).
+      # 3.0 mmHg = ISS operational limit (~3,913 ppm).
+      # 5.3 mmHg = NASA 180-day SMAC (~6,913 ppm).
+      # ppm = mmHg × 1304.34.
+      numeric_status(value) do |v|
+        if v > mmhg_to_ppm(CO2_SMAC_180D_MMHG) then "red"
+        elsif v >= mmhg_to_ppm(CO2_SYMPTOMS_MMHG) then "yellow"
+        else "green"
+        end
+      end
     when "calories_intake"
       # Source: NASA HRP - Space Physiology — minimum daily intake ~2,000 kcal.
       # Upper bounds are "unverified" (mission-specific, no citable NASA threshold).
@@ -173,6 +191,15 @@ class HealthEvaluator
   # El peor estado entre varios semáforos (criterio conservador de vuelo).
   def self.worst_status(*statuses)
     statuses.compact.min_by { |status| STATUS_RANK.fetch(status.to_s, 9) } || "green"
+  end
+
+  # CO₂ unit conversion from the verified reference block: ppm = mmHg × 1304.34.
+  def self.mmhg_to_ppm(mmhg)
+    (mmhg.to_f * CO2_PPM_PER_MMHG).round
+  end
+
+  def self.ppm_to_mmhg(ppm)
+    ppm.to_f / CO2_PPM_PER_MMHG
   end
 
   # Categoría AHA combinada de presión arterial (usa la peor de sistólica/diastólica).

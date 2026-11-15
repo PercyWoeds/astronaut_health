@@ -1,15 +1,15 @@
 require "test_helper"
 
-class AiFlightSurgeonTest < ActiveSupport::TestCase
+class RuleBasedFlightSurgeonTest < ActiveSupport::TestCase
   setup do
     @mission = Mission.create!(name: "AI Surgeon", code: "AI-#{SecureRandom.hex(4)}")
     @astronaut = Astronaut.create!(name: "AI Astronaut", mission: @mission)
   end
 
   test "sin lecturas y sin clima espacial es nominal con score 100" do
-    surgeon = AiFlightSurgeon.new(@astronaut, space_weather: [])
+    surgeon = RuleBasedFlightSurgeon.new(@astronaut, space_weather: [])
 
-    assert_equal [ AiFlightSurgeon::NOMINAL_RECOMMENDATION ], surgeon.generate_report
+    assert_equal [ RuleBasedFlightSurgeon::NOMINAL_RECOMMENDATION ], surgeon.generate_report
     assert_equal 100, surgeon.calculate_health_score
     assert_not surgeon.critical?
   end
@@ -21,7 +21,7 @@ class AiFlightSurgeonTest < ActiveSupport::TestCase
       )
     end
 
-    surgeon = AiFlightSurgeon.new(@astronaut, space_weather: [])
+    surgeon = RuleBasedFlightSurgeon.new(@astronaut, space_weather: [])
     report = surgeon.generate_report
 
     assert(report.any? { |line| line.include?("Sleep duration decreased") })
@@ -34,7 +34,7 @@ class AiFlightSurgeonTest < ActiveSupport::TestCase
       indicator_type: "mood_score", value: 3, measured_at: Time.current
     )
 
-    surgeon = AiFlightSurgeon.new(@astronaut, space_weather: [])
+    surgeon = RuleBasedFlightSurgeon.new(@astronaut, space_weather: [])
 
     assert(surgeon.generate_report.any? { |line| line.include?("Mood Index is low") })
     assert_equal 80, surgeon.calculate_health_score
@@ -45,7 +45,7 @@ class AiFlightSurgeonTest < ActiveSupport::TestCase
       indicator_type: "blood_pressure_systolic", value: 150, measured_at: Time.current
     )
 
-    surgeon = AiFlightSurgeon.new(@astronaut, space_weather: [])
+    surgeon = RuleBasedFlightSurgeon.new(@astronaut, space_weather: [])
 
     assert(surgeon.generate_report.any? { |line| line.include?("Systolic BP is elevated") })
     assert_equal 70, surgeon.calculate_health_score
@@ -56,7 +56,7 @@ class AiFlightSurgeonTest < ActiveSupport::TestCase
       indicator_type: "blood_glucose", value: 300, measured_at: Time.current
     )
 
-    surgeon = AiFlightSurgeon.new(@astronaut, space_weather: [])
+    surgeon = RuleBasedFlightSurgeon.new(@astronaut, space_weather: [])
 
     assert(surgeon.generate_report.any? { |line| line.include?("Blood glucose is critical") })
     assert_equal 70, surgeon.calculate_health_score
@@ -67,14 +67,14 @@ class AiFlightSurgeonTest < ActiveSupport::TestCase
       indicator_type: "blood_pressure_diastolic", value: 95, measured_at: Time.current
     )
 
-    surgeon = AiFlightSurgeon.new(@astronaut, space_weather: [])
+    surgeon = RuleBasedFlightSurgeon.new(@astronaut, space_weather: [])
 
     assert(surgeon.generate_report.any? { |line| line.include?("Diastolic BP is critical") })
     assert_equal 70, surgeon.calculate_health_score
   end
 
   test "eventos solares generan alerta y restan 20 puntos" do
-    surgeon = AiFlightSurgeon.new(@astronaut, space_weather: [ { "sepID" => "SEP-1" } ])
+    surgeon = RuleBasedFlightSurgeon.new(@astronaut, space_weather: [ { "sepID" => "SEP-1" } ])
 
     assert(surgeon.generate_report.any? { |line| line.include?("Recent Solar Particle Events") })
     assert_equal 80, surgeon.calculate_health_score
@@ -85,7 +85,7 @@ class AiFlightSurgeonTest < ActiveSupport::TestCase
     @astronaut.health_readings.create!(indicator_type: "mood_score", value: 2, measured_at: Time.current)
     @astronaut.health_readings.create!(indicator_type: "blood_pressure_systolic", value: 160, measured_at: Time.current)
 
-    surgeon = AiFlightSurgeon.new(@astronaut, space_weather: [ { "sepID" => "SEP-1" } ])
+    surgeon = RuleBasedFlightSurgeon.new(@astronaut, space_weather: [ { "sepID" => "SEP-1" } ])
 
     assert_equal 10, surgeon.calculate_health_score
   end

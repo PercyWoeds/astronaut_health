@@ -45,8 +45,8 @@ const ZONE_LABELS = {
 
 const STATUS_LABELS = {
   green: "Normal",
-  yellow: "Watch",
-  red: "Critical",
+  yellow: "Follow-up",
+  red: "Medical evaluation",
   unknown: "No data"
 }
 

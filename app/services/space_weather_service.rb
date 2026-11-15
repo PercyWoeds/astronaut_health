@@ -16,7 +16,7 @@ class SpaceWeatherService
     # Seam para tests o entornos sin red: si se define, se usa en vez de HTTP.
     attr_writer :provider
 
-    # Atajo de clase usado por el DashboardController y el AI Flight Surgeon.
+    # Atajo de clase usado por el DashboardController y el Rule-Based Flight Surgeon.
     def recent_solar_particles(days: 7, now: Time.current)
       return Array(@provider.call) if @provider
 

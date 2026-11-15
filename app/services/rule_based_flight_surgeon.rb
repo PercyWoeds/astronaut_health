@@ -1,4 +1,4 @@
-# "AI Flight Surgeon": analiza las últimas 7 lecturas de HealthReading y genera
+# Rule-Based Flight Surgeon: analiza las últimas 7 lecturas de HealthReading y genera
 # recomendaciones operativas al estilo Mission Control, además de un score 0-100.
 #
 # Los indicadores reales del modelo son:
@@ -7,7 +7,7 @@
 #   - "blood_pressure_systolic"  (presión sistólica mmHg)
 #   - "blood_pressure_diastolic" (presión diastólica mmHg)
 #   - "blood_glucose"            (glucosa mg/dL)
-class AiFlightSurgeon
+class RuleBasedFlightSurgeon
   SLEEP_THRESHOLD = 6.0
   MOOD_THRESHOLD = 4.0
   SYSTOLIC_THRESHOLD = 140

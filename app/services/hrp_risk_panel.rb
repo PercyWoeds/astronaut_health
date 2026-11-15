@@ -1,10 +1,10 @@
 # Panel de los 5 peligros oficiales del NASA Human Research Program (HRP).
 #
 # Traduce los indicadores de la app y el último chequeo diario (DailyCheck)
-# a riesgos de misión. Incluye el aporte de la Agencia Espacial Canadiense (CSA):
-#   - Radiación de neutrones medida por el instrumento CANS (~30% del total en la ISS).
+# a riesgos de misión. Usa los indicadores de los cinco peligros del HRP:
+#   - Radiación (dosis simulada; estimación CSA de la fracción de neutrones).
 #   - Pérdida de densidad ósea / osteoporosis acelerada y contramedidas.
-#   - CO₂ en el entorno cerrado.
+#   - CO₂ en el entorno cerrado (ISS reference points).
 #
 # El resultado es un array de hashes listo para renderizar en la vista:
 #   { key:, name:, icon:, value_label:, detail:, status:, progress:, note:, hint: }
@@ -12,15 +12,17 @@
 class HrpRiskPanel
   # Valores simulados de la misión. Ajústalos si quieres contar otra historia
   # en la demo (por ejemplo, una tormenta solar durante la presentación).
-  # NASA-STD-3001 career radiation exposure limit for the whole body (600 mSv).
-  # Source: NASA Office of the Chief Health and Medical Officer, "NASA Space
-  # Flight Human-System Standard" overview (Sept 2021), slide on radiation limits.
+  # Simulated accumulated dose for the demo (NASA-STD-3001 career limit: 600 mSv).
+  # Source: NASA OCHMO, "Standards overview" and "Radiation protection technical brief".
   RADIATION_DOSE_MSV = 18.6
   RADIATION_LIMIT_MSV = 600.0
-  RADIATION_LIMIT_SOURCE = "https://www.nasa.gov/sites/default/files/atoms/files/ochmo_standards_overview_sept_15_2021_francisco.pdf"
+  RADIATION_SOURCE = "NASA OCHMO, Standards overview (NASA-STD-3001, Vol. 1); " \
+                     "NASA OCHMO, Radiation protection technical brief".freeze
+  # Estimation from the Canadian Space Agency applied to the simulated dose.
+  # It is NOT a measurement made by this app.
   NEUTRON_SHARE_PERCENT = 30
-  # 40 min de retardo se considera el límite de confort operativo de la demo.
-  SIGNAL_DELAY_COMFORT_MINUTES = 40
+  NEUTRON_SOURCE = "CSA, Monitoring radiation for astronaut health, 2026-02-26 " \
+                   "(asc-csa.gc.ca/eng/news/articles/2026/2026-02-26-monitoring-radiation-astronaut-health.asp)".freeze
 
   def initialize(astronaut)
     @astronaut = astronaut
@@ -55,10 +57,10 @@ class HrpRiskPanel
       key: "radiation",
       name: "Radiation",
       icon: "☢️",
-      value_label: "#{format_number(RADIATION_DOSE_MSV)} mSv",
-      detail: "Career limit: #{format_number(RADIATION_LIMIT_MSV)} mSv (NASA-STD-3001, simulated dose)",
+      value_label: "Simulated dose #{format_number(RADIATION_DOSE_MSV)} mSv",
+      detail: "Career limit: #{format_number(RADIATION_LIMIT_MSV)} mSv (NASA-STD-3001)",
       note: "Estimation: ~#{NEUTRON_SHARE_PERCENT}% of ISS radiation is neutrons (CSA).",
-      hint: "Simulated accumulated dose. The 600 mSv career limit is from NASA-STD-3001.",
+      hint: "Simulated accumulated dose, not measured. #{RADIATION_SOURCE}. #{NEUTRON_SOURCE}.",
       status: status_for_ratio(ratio, yellow_at: 0.5, red_at: 0.8),
       progress: percent(ratio)
     }
@@ -101,19 +103,19 @@ class HrpRiskPanel
 
   # 3. Distancia a la Tierra: retardo de comunicaciones (one-way) según destino.
   # ISS ~0 s (órbita baja), Luna ~1.3 s y Marte ~20 min.
+  # Solo informativo: no cambia el estado de la zona.
   def distance_risk
     seconds = CommDelay.seconds_for(@astronaut)
-    ratio = seconds / (SIGNAL_DELAY_COMFORT_MINUTES * 60.0)
     {
       key: "distance",
       name: "Distance to Earth",
       icon: "🛰️",
       value_label: "Delay: #{delay_label(seconds)}",
-      detail: "One-way link with Houston",
+      detail: "One-way link with Houston · informative only",
       note: nil,
-      hint: nil,
-      status: status_for_ratio(ratio, yellow_at: 0.5, red_at: 0.85),
-      progress: percent(ratio)
+      hint: "Comm delay is informational. It does not change the health status.",
+      status: "unknown",
+      progress: 0
     }
   end
 
@@ -157,16 +159,21 @@ class HrpRiskPanel
   def closed_environment_risk
     if daily_check
       value = daily_check.co2_level.to_i
+      mmhg = HealthEvaluator.ppm_to_mmhg(value)
       return {
         key: "environment",
         name: "Closed environment",
         icon: "🌡️",
-        value_label: "CO₂ #{value} ppm",
-        detail: "Air quality · target < 1,000 ppm",
-        note: value > 1_000 ? "CO₂ above the 1,000 ppm target (NASA-STD-3001). Check ventilation and filters." : nil,
-        hint: nil,
+        value_label: "CO₂ #{value} ppm (~#{format("%.2f", mmhg)} mmHg)",
+        detail: "Air quality · #{HealthEvaluator::CO2_REFERENCE_LABEL}",
+        note: mmhg > HealthEvaluator::CO2_SMAC_180D_MMHG ?
+              "Above NASA 180-day SMAC (5.3 mmHg, ~6,913 ppm)." :
+              mmhg >= HealthEvaluator::CO2_OPERATING_LIMIT_MMHG ?
+              "At/above the ISS operational limit (3.0 mmHg, ~3,913 ppm) — check ventilation." :
+              nil,
+        hint: "#{HealthEvaluator::CO2_SOURCE}. 2.3 mmHg: first symptoms reported by ISS crew.",
         status: daily_field_status("co2_level"),
-        progress: percent(value / 3_000.0)
+        progress: percent(value / HealthEvaluator.mmhg_to_ppm(HealthEvaluator::CO2_SMAC_180D_MMHG).to_f)
       }
     end
 

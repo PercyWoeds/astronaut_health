@@ -20,18 +20,18 @@ class DashboardController < ApplicationController
     @comm_delay_text = @astronaut ? CommDelay.text_for(@astronaut) : nil
     @critical_alert = @astronaut ? Alert.open_for_astronaut(@astronaut).action.first : nil
 
-    # AI Flight Surgeon + clima espacial (DONKI). Una sola llamada HTTP por render.
+    # Rule-Based Flight Surgeon + clima espacial (DONKI). Una sola llamada HTTP por render.
     @space_weather_events = @astronaut ? SpaceWeatherService.recent_solar_particles : []
     @space_weather_checked_at = Time.current
-    @ai_flight_surgeon = @astronaut ? AiFlightSurgeon.new(@astronaut, space_weather: @space_weather_events) : nil
-    @ai_recommendations = @ai_flight_surgeon ? @ai_flight_surgeon.generate_report : []
-    @health_score = @ai_flight_surgeon ? @ai_flight_surgeon.calculate_health_score : 100
+    @rule_based_flight_surgeon = @astronaut ? RuleBasedFlightSurgeon.new(@astronaut, space_weather: @space_weather_events) : nil
+    @rule_based_recommendations = @rule_based_flight_surgeon ? @rule_based_flight_surgeon.generate_report : []
+    @health_score = @rule_based_flight_surgeon ? @rule_based_flight_surgeon.calculate_health_score : 100
     # Mientras haya una zona crítica, el score se limita para no mostrar un
     # número "aceptable" (p. ej. 70) junto a un estado Critical.
     @health_score_capped = @snapshot&.dig(:overall_status) == "red" && @health_score > 69
     @health_score = 69 if @health_score_capped
-    @ai_critical = @ai_flight_surgeon ? @ai_flight_surgeon.critical? : false
-    @health_score_discounts = health_score_discounts(@ai_flight_surgeon)
+    @rule_based_critical = @rule_based_flight_surgeon ? @rule_based_flight_surgeon.critical? : false
+    @health_score_discounts = health_score_discounts(@rule_based_flight_surgeon)
 
     # Chequeo diario (valores de hoy o del último registro como referencia).
     @daily_check = if @astronaut
@@ -77,18 +77,18 @@ class DashboardController < ApplicationController
     diastolic_value = surgeon.diastolic_value
     glucose_value = surgeon.glucose_value
 
-    if sleep_average && sleep_average < AiFlightSurgeon::SLEEP_THRESHOLD
-      discounts << { label: "Sleep below #{AiFlightSurgeon::SLEEP_THRESHOLD.to_i} h",
+    if sleep_average && sleep_average < RuleBasedFlightSurgeon::SLEEP_THRESHOLD
+      discounts << { label: "Sleep below #{RuleBasedFlightSurgeon::SLEEP_THRESHOLD.to_i} h",
                      detail: "#{sleep_average.round(1)} h average", points: 20 }
     end
 
-    if mood_average && mood_average < AiFlightSurgeon::MOOD_THRESHOLD
-      discounts << { label: "Mood below #{AiFlightSurgeon::MOOD_THRESHOLD.to_i}/10",
+    if mood_average && mood_average < RuleBasedFlightSurgeon::MOOD_THRESHOLD
+      discounts << { label: "Mood below #{RuleBasedFlightSurgeon::MOOD_THRESHOLD.to_i}/10",
                      detail: "#{mood_average.round(1)}/10 average", points: 20 }
     end
 
-    if systolic_value && systolic_value > AiFlightSurgeon::SYSTOLIC_THRESHOLD
-      discounts << { label: "Systolic BP above #{AiFlightSurgeon::SYSTOLIC_THRESHOLD} mmHg",
+    if systolic_value && systolic_value > RuleBasedFlightSurgeon::SYSTOLIC_THRESHOLD
+      discounts << { label: "Systolic BP above #{RuleBasedFlightSurgeon::SYSTOLIC_THRESHOLD} mmHg",
                      detail: "#{systolic_value.round} mmHg", points: 30 }
     end
 

@@ -23,7 +23,7 @@ class DashboardTest < ActionDispatch::IntegrationTest
     assert_match "Delay with Earth: &lt; 1 s (near real-time)", response.body
   end
 
-  test "muestra las tarjetas de AI Flight Surgeon, Health Score y clima espacial" do
+  test "muestra las tarjetas de Rule-Based Flight Surgeon, Health Score y clima espacial" do
     get_dashboard
 
     assert_response :success
