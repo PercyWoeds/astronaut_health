@@ -259,6 +259,7 @@ class HealthSnapshot
         measured_at: reading.measured_at.iso8601,
         category: blood_pressure_category(reading.indicator_type),
         baseline_note: reading.baseline_note,
+        hazards: hazard_list_for(reading.indicator_type),
         recommendation: RecommendationEngine.for(reading)
       }
     end
@@ -272,7 +273,8 @@ class HealthSnapshot
         value: reading.value,
         unit: reading.unit,
         status: reading.status,
-        primary_zone: primary_zone_by_indicator.fetch(type, name)
+        primary_zone: primary_zone_by_indicator.fetch(type, name),
+        hazards: hazard_list_for(type)
       }
     end
 
@@ -293,11 +295,20 @@ class HealthSnapshot
     indicators = readings + daily_indicators + research_indicators + symptom_indicators
     indicators << systemic_indicator if systemic_alert
 
+    hazards = indicators.flat_map { |item| Array(item[:hazards]) }.uniq
+    hazard_reason = indicators
+      .select { |item| Array(item[:hazards]).any? }
+      .map { |item| "#{item[:label]} → #{HealthEvaluator.hazard_labels(item[:hazards]).join(', ')}" }
+      .uniq
+      .join("; ")
+
     {
       name: name,
       description: description,
       status: status,
       note: note_parts.compact.uniq.join(" ").presence,
+      hazards: hazards,
+      hazard_reason: hazard_reason.presence,
       indicators: indicators,
       shared_alerts: shared_alerts
     }
@@ -324,11 +335,23 @@ class HealthSnapshot
       unit: "",
       status: "red",
       measured_at: (research_assessment&.assessed_on&.to_time || Time.current).iso8601,
+      hazards: HealthEvaluator::RESEARCH_HAZARDS.fetch("systemic_immune_alert"),
       recommendation: {
         text: HealthEvaluator::IMMUNE_PROTOCOL,
         urgency: "urgent",
         escalate: true
       }
     }
+  end
+
+  def hazard_list_for(type)
+    @hazard_lists ||= begin
+      from_db = Indicator.where(key: HealthEvaluator::HAZARD_LISTS.keys).pluck(:key, :hazard_list).to_h
+      HealthEvaluator::HAZARD_LISTS.each_with_object(from_db) do |(key, fallback), memo|
+        memo[key] = fallback if Array(memo[key]).empty?
+      end
+    end
+
+    Array(@hazard_lists[type.to_s])
   end
 end

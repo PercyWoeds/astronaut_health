@@ -50,6 +50,14 @@ const STATUS_LABELS = {
   unknown: "No data"
 }
 
+const HAZARD_LABELS = {
+  space_radiation: "Space radiation",
+  isolation_confinement: "Isolation and confinement",
+  distance_from_earth: "Distance from Earth",
+  gravity_fields: "Gravity fields",
+  closed_environment: "Closed environment"
+}
+
 const LABEL_DOT_CLASSES = {
   green: "bg-emerald-400",
   yellow: "bg-amber-400",
@@ -927,6 +935,10 @@ export default class extends Controller {
       const baselineNote = indicator.baseline_note
         ? `<p class="mt-0.5 text-[10px] text-cyan-300">${this.escape(indicator.baseline_note)}</p>`
         : ""
+      const hazardLabels = (indicator.hazards || []).map((hazard) => HAZARD_LABELS[hazard] || hazard)
+      const hazardNote = hazardLabels.length
+        ? `<p class="mt-1 text-[10px] text-slate-500">HRP hazard: ${this.escape(hazardLabels.join(", "))}</p>`
+        : ""
 
       return `
         <div class="rounded-xl border border-slate-700 bg-slate-950/60 p-3">
@@ -939,6 +951,7 @@ export default class extends Controller {
             <span class="inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase ${badge}">${this.escape(STATUS_LABELS[indicator.status] || indicator.status)}</span>
           </div>
           ${recommendation ? `<p class="mt-2 text-xs leading-relaxed text-slate-300">${this.escape(recommendation)}</p>` : ""}
+          ${hazardNote}
           <p class="mt-1 text-[10px] uppercase tracking-wider ${urgencyClass}">${urgencyLabel}</p>
         </div>
       `
@@ -974,6 +987,7 @@ export default class extends Controller {
       </div>
       ${causeBlock}
       ${zone.note ? `<p class="mt-2 rounded-lg border border-cyan-500/20 bg-cyan-500/5 px-2.5 py-2 text-[11px] leading-relaxed text-cyan-100/90">${this.escape(zone.note)}</p>` : ""}
+      ${zone.hazard_reason ? `<div class="mt-2 rounded-lg border border-slate-700 bg-slate-950/40 px-2.5 py-2"><p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Why these hazards</p><p class="mt-1 text-[11px] leading-relaxed text-slate-300">${this.escape(zone.hazard_reason)}</p></div>` : ""}
       <div class="mt-4 space-y-2">
         ${alertIndicators.map(indicatorRow).join("") || '<p class="rounded-xl border border-dashed border-slate-700 p-3 text-sm text-slate-400">No measurements for this zone.</p>'}
       </div>

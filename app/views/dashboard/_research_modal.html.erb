@@ -47,7 +47,7 @@
           <div class="mt-2 grid gap-3 sm:grid-cols-2">
             <% [
               { field: :vision_test_performed, label: "Vision test performed", hint: "Required every 7 days", value: @research_assessment.vision_test_performed },
-              { field: :b_complex_supplement_taken, label: "B-Complex taken", hint: "Vitamin B study", value: @research_assessment.b_complex_supplement_taken }
+              { field: :b_complex_supplement_taken, label: "B-Complex study", hint: "Only if enrolled: supplement taken today", value: @research_assessment.b_complex_supplement_taken }
             ].each do |toggle| %>
               <label class="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3">
                 <span>

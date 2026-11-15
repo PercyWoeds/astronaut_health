@@ -10,6 +10,7 @@ class Indicator < ApplicationRecord
   validates :unit, presence: true
   validates :bad_direction, inclusion: { in: BAD_DIRECTIONS }
   validates :frequency_days, numericality: { only_integer: true, greater_than: 0 }
+  validate :hazard_list_keys_are_known
 
   scope :for_axis, ->(axis) { where(axis: axis) }
   scope :daily, -> { where(frequency_days: 1) }
@@ -63,12 +64,25 @@ class Indicator < ApplicationRecord
   def self.seed_catalog!
     catalog.each do |key, attrs|
       indicator = find_or_initialize_by(key: key)
-      indicator.assign_attributes(attrs)
+      indicator.assign_attributes(attrs.merge(hazard_list: HealthEvaluator::HAZARD_LISTS.fetch(key, [])))
       indicator.save!
     end
   end
 
   def label
     I18n.t("indicators.#{key}", default: key.humanize)
+  end
+
+  def hazard_labels
+    HealthEvaluator.hazard_labels(hazard_list)
+  end
+
+  private
+
+  def hazard_list_keys_are_known
+    unknown = Array(hazard_list) - HealthEvaluator::HRP_HAZARDS.keys
+    return if unknown.empty?
+
+    errors.add(:hazard_list, "contains unknown HRP hazards: #{unknown.join(', ')}")
   end
 end

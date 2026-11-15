@@ -577,7 +577,7 @@
               </ol>
               <%= form_with url: ground_reports_path, method: :post, class: "mt-2" do |form| %>
                 <%= hidden_field_tag :astronaut_id, @astronaut.id %>
-                <%= hidden_field_tag :summary, "Automatic report of critical zone: #{@astronaut.name}" %>
+                <%= hidden_field_tag :summary, "Automatic report: a monitored zone requires medical evaluation — #{@astronaut.name}" %>
                 <%= form.submit "🚨 Report to Flight Surgeon", class: "w-full rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-2 text-sm font-semibold text-rose-200 hover:bg-rose-500/20" %>
               <% end %>
             </div>

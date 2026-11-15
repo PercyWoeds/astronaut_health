@@ -59,4 +59,25 @@ class HealthSnapshotTest < ActiveSupport::TestCase
     assert_equal "yellow", limbs[:status]
     assert limbs[:indicators].any? { |indicator| indicator[:type] == "egress_fitness_completed" }
   end
+
+  test "cada indicador expone su lista de peligros y el motivo por zona" do
+    Indicator.seed_catalog!
+    BodyZone.create!(
+      name: "test_hazards",
+      description: "Zone for hazard mapping",
+      related_indicators: [ "blood_pressure_systolic" ]
+    )
+    @astronaut.health_readings.create!(
+      indicator_type: "blood_pressure_systolic", value: 118, measured_at: Time.current
+    )
+
+    snapshot = HealthSnapshot.new(@astronaut).as_json
+    zone = snapshot[:zones].find { |item| item[:name] == "test_hazards" }
+    reading = zone[:indicators].find { |item| item[:type] == "blood_pressure_systolic" }
+
+    assert_equal [ "gravity_fields" ], reading[:hazards]
+    assert_equal [ "gravity_fields" ], zone[:hazards]
+    assert_match "Gravity fields", zone[:hazard_reason]
+    assert_includes Indicator.find_by(key: "blood_pressure_systolic").hazard_list, "gravity_fields"
+  end
 end

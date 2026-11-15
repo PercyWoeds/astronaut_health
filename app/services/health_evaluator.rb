@@ -117,6 +117,65 @@ class HealthEvaluator
     "radiation" => "NASA-STD-3001 career limit; dose in this app is simulated"
   }.freeze
 
+  # Official NASA HRP hazard keys used across the app.
+  HRP_HAZARDS = {
+    "space_radiation" => "Space radiation",
+    "isolation_confinement" => "Isolation and confinement",
+    "distance_from_earth" => "Distance from Earth",
+    "gravity_fields" => "Gravity fields",
+    "closed_environment" => "Closed environment"
+  }.freeze
+
+  # Hazards linked to each indicator. Hydration has a documented source for the
+  # water requirement (OCHMO-TB-027); its link to distance from Earth is a team
+  # inference, not a NASA claim.
+  HAZARD_LISTS = {
+    "blood_pressure_systolic" => %w[gravity_fields],
+    "blood_pressure_diastolic" => %w[gravity_fields],
+    "heart_rate" => %w[gravity_fields],
+    "blood_glucose" => %w[gravity_fields],
+    "body_temperature" => %w[closed_environment],
+    "sleep_hours" => %w[isolation_confinement],
+    "mood_score" => %w[isolation_confinement],
+    "reaction_time" => %w[isolation_confinement],
+    "meals_completed_percent" => %w[closed_environment],
+    "social_contact_minutes" => %w[isolation_confinement],
+    "hydration_ml" => %w[gravity_fields distance_from_earth],
+    "muscle_performance" => %w[gravity_fields],
+    "balance" => %w[gravity_fields]
+  }.freeze
+
+  DAILY_FIELD_HAZARDS = {
+    "bone_density_loss_percent" => %w[gravity_fields],
+    "co2_level" => %w[closed_environment],
+    "stress_level" => %w[isolation_confinement],
+    "calories_intake" => %w[closed_environment],
+    "vision_blurred" => %w[gravity_fields],
+    "dizziness_reported" => %w[gravity_fields],
+    "skin_rash" => %w[closed_environment]
+  }.freeze
+
+  RESEARCH_HAZARDS = {
+    "virus_reactivation_suspected" => %w[closed_environment],
+    "saliva_sample_taken" => %w[closed_environment],
+    "sans_study" => %w[gravity_fields],
+    "b_complex_supplement" => %w[closed_environment],
+    "calcium_isotopes_level" => %w[gravity_fields],
+    "telomere_length" => %w[space_radiation],
+    "spatial_cognition_score" => %w[isolation_confinement],
+    "vestibular_test_passed" => %w[gravity_fields],
+    "archer_study" => %w[isolation_confinement],
+    "egress_fitness_completed" => %w[gravity_fields],
+    "rash_or_hives" => %w[closed_environment],
+    "vision_changes" => %w[gravity_fields],
+    "dizziness_nausea" => %w[gravity_fields],
+    "systemic_immune_alert" => %w[closed_environment]
+  }.freeze
+
+  def self.hazard_labels(keys)
+    Array(keys).map { |key| HRP_HAZARDS.fetch(key.to_s, key.to_s.humanize) }
+  end
+
   BASELINE_DEVIATION_PERCENT = 20
   BASELINE_PROTOCOL = "Deviation from the pre-flight baseline; may reflect adaptation to microgravity."
   CONFIRMED_EXTREME_NOTE = "Confirmed extreme value. Follow the mission medical protocol."
@@ -140,20 +199,20 @@ class HealthEvaluator
   # ---------------------------------------------------------------------------
   IMMUNE_PROTOCOL = "Isolate, collect a dry saliva sample, notify Houston."
   SALIVA_SAMPLE_PROTOCOL = "Dry saliva sample pending (Immune Biomarkers / Artemis). Collect and register."
-  SANS_STUDY_PROTOCOL = "SANS study: perform OCT and visual exam. Take the daily B-Complex supplement (B-Complex study)."
+  SANS_STUDY_PROTOCOL = "SANS study: perform OCT and visual exam. If enrolled in the B-Complex study, take the daily supplement."
   CIPHER_BONE_PROTOCOL = "CIPHER study: bone loss and fracture risk during capsule egress. Monitor calcium/telomeres and reinforce countermeasures."
   CIPHER_EGRESS_PROTOCOL = "CIPHER study: Egress test (capsule egress) pending. Complete Egress Fitness before authorizing the activity."
   ARCHER_FATIGUE_PROTOCOL = "ARCHeR study: fatigue and sleep disruption. Sync actigraphy and repeat the cognitive performance survey."
 
   # Daily check field presentation metadata.
   DAILY_FIELD_META = {
-    "bone_density_loss_percent" => { label: "Bone density loss", unit: "%", zone: "limbs", protocol: BONE_PROTOCOL },
-    "co2_level" => { label: "CO₂ in closed environment", unit: "ppm", zone: nil, protocol: CO2_PROTOCOL },
-    "stress_level" => { label: "Stress level", unit: "/10", zone: "psychological", protocol: PSYCH_PROTOCOL },
-    "calories_intake" => { label: "Caloric intake", unit: "kcal", zone: "abdomen", protocol: NUTRITION_PROTOCOL },
-    "vision_blurred" => { label: "Blurred vision (SANS)", unit: "", zone: "head", protocol: SANS_PROTOCOL },
-    "dizziness_reported" => { label: "Dizziness reported", unit: "", zone: "chest", protocol: SENSORIMOTOR_PROTOCOL },
-    "skin_rash" => { label: "Skin lesion", unit: "", zone: "abdomen", protocol: SKIN_PROTOCOL }
+    "bone_density_loss_percent" => { label: "Bone density loss", unit: "%", zone: "limbs", protocol: BONE_PROTOCOL, hazards: %w[gravity_fields] },
+    "co2_level" => { label: "CO₂ in closed environment", unit: "ppm", zone: nil, protocol: CO2_PROTOCOL, hazards: %w[closed_environment] },
+    "stress_level" => { label: "Stress level", unit: "/10", zone: "psychological", protocol: PSYCH_PROTOCOL, hazards: %w[isolation_confinement] },
+    "calories_intake" => { label: "Caloric intake", unit: "kcal", zone: "abdomen", protocol: NUTRITION_PROTOCOL, hazards: %w[closed_environment] },
+    "vision_blurred" => { label: "Blurred vision (SANS)", unit: "", zone: "head", protocol: SANS_PROTOCOL, hazards: %w[gravity_fields] },
+    "dizziness_reported" => { label: "Dizziness reported", unit: "", zone: "chest", protocol: SENSORIMOTOR_PROTOCOL, hazards: %w[gravity_fields] },
+    "skin_rash" => { label: "Skin lesion", unit: "", zone: "abdomen", protocol: SKIN_PROTOCOL, hazards: %w[closed_environment] }
   }.freeze
 
   STATUS_RANK = { "red" => 0, "yellow" => 1, "green" => 2, "unknown" => 3 }.freeze
@@ -353,7 +412,7 @@ class HealthEvaluator
 
       unless assessment.b_complex_supplement_taken
         zone_indicators["head"] << research_indicator(
-          assessment, type: "b_complex_supplement", label: "B-Complex supplement",
+          assessment, type: "b_complex_supplement", label: "B-Complex study (if enrolled)",
           value: "Pending", unit: "", status: "yellow", protocol: SANS_STUDY_PROTOCOL
         )
       end
@@ -474,6 +533,7 @@ class HealthEvaluator
         unit: unit,
         status: status,
         measured_at: research_timestamp(record),
+        hazards: RESEARCH_HAZARDS.fetch(type.to_s, []),
         recommendation: {
           text: protocol,
           urgency: status == "red" ? "urgent" : "watch",
@@ -525,6 +585,7 @@ class HealthEvaluator
           unit: meta[:unit],
           status: status,
           measured_at: (check.checked_on&.to_time || Time.current).iso8601,
+          hazards: meta[:hazards],
           recommendation: {
             text: meta[:protocol],
             urgency: status == "red" ? "urgent" : "watch",
