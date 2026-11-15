@@ -37,6 +37,30 @@ class GamificationServiceTest < ActiveSupport::TestCase
     assert_equal 135, @astronaut.reload.total_points
   end
 
+  test "otorga logros por indicadores experimentales del día" do
+    today_early = [ Date.current.beginning_of_day + 1.hour, Time.current - 1.minute ].min
+    @astronaut.health_readings.create!(
+      indicator_type: "hydration_ml", value: 2400, thirst_score: 3,
+      data_origin: "simulated", measured_at: today_early
+    )
+    @astronaut.health_readings.create!(
+      indicator_type: "muscle_performance", value: 50,
+      resistance_minutes: 20, aerobic_minutes: 30,
+      perceived_exertion: 5, muscle_soreness: 1,
+      data_origin: "simulated", measured_at: today_early
+    )
+    @astronaut.health_readings.create!(
+      indicator_type: "balance", value: 0, balance_episodes: 1,
+      balance_environment: "earth", data_origin: "simulated", measured_at: today_early
+    )
+
+    awarded = GamificationService.new(@astronaut).call.map(&:name)
+
+    assert_includes awarded, "Hydration logged"
+    assert_includes awarded, "Training logged"
+    assert_includes awarded, "Balance self-check logged"
+  end
+
   test "es idempotente y otorga racha de 3 días" do
     complete_day!(Time.zone.today)
     GamificationService.new(@astronaut).call

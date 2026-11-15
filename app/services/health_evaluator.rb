@@ -163,7 +163,6 @@ class HealthEvaluator
     "calcium_isotopes_level" => %w[gravity_fields],
     "telomere_length" => %w[space_radiation],
     "spatial_cognition_score" => %w[isolation_confinement],
-    "vestibular_test_passed" => %w[gravity_fields],
     "archer_study" => %w[isolation_confinement],
     "egress_fitness_completed" => %w[gravity_fields],
     "rash_or_hives" => %w[closed_environment],
@@ -451,17 +450,6 @@ class HealthEvaluator
           assessment, type: "spatial_cognition_score", label: "Spatial cognition (CIPHER)",
           value: assessment.spatial_cognition_score, unit: "/100",
           status: spatial_status, protocol: "CIPHER study: low spatial cognition performance. Repeat the test and watch for fatigue."
-        )
-      end
-
-      vestibular_status = assessment.vestibular_test_passed ? "green" : "yellow"
-      field_statuses["vestibular_test_passed"] = vestibular_status
-      if vestibular_status == "yellow"
-        zone_statuses["limbs"] = worst_status(zone_statuses["limbs"], "yellow")
-        zone_indicators["limbs"] << research_indicator(
-          assessment, type: "vestibular_test_passed", label: "Vestibular test (CIPHER)",
-          value: "Pending", unit: "", status: "yellow",
-          protocol: "CIPHER study: vestibular test pending. Assess balance before capsule egress."
         )
       end
 

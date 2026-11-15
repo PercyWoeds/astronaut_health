@@ -13,7 +13,13 @@ class GamificationService
     { key: "streak_7", name: "7-day streak", points: 250,
       description: "A full week of steady monitoring." },
     { key: "perfect_day", name: "Green day", points: 75,
-      description: "All of your indicators were in the green range today." }
+      description: "All of your indicators were in the green range today." },
+    { key: "hydration_logged", name: "Hydration logged", points: 15,
+      description: "You logged today's fluid intake with the experimental hydration indicator." },
+    { key: "training_logged", name: "Training logged", points: 15,
+      description: "You logged today's training load with the experimental muscle proxy." },
+    { key: "balance_logged", name: "Balance self-check logged", points: 15,
+      description: "You logged today's balance symptom score with the experimental self-check." }
   ].freeze
 
   attr_reader :astronaut, :date
@@ -28,6 +34,10 @@ class GamificationService
     awarded = []
 
     awarded << award("first_reading") if astronaut.health_readings.exists?
+
+    %w[hydration_ml muscle_performance balance].each do |experimental_type|
+      awarded << award(experimental_achievement_key(experimental_type)) if logged_today?(experimental_type)
+    end
 
     if daily_checkup_complete?
       awarded << award("daily_checkup")
@@ -52,6 +62,18 @@ class GamificationService
   end
 
   private
+
+  def experimental_achievement_key(indicator_type)
+    {
+      "hydration_ml" => "hydration_logged",
+      "muscle_performance" => "training_logged",
+      "balance" => "balance_logged"
+    }.fetch(indicator_type)
+  end
+
+  def logged_today?(indicator_type)
+    astronaut.health_readings.on_day(date).where(indicator_type: indicator_type).exists?
+  end
 
   def daily_checkup_complete?(day = date)
     types = astronaut.health_readings.on_day(day).distinct.pluck(:indicator_type)

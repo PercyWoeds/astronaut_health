@@ -39,12 +39,12 @@ zones = [
   {
     name: "abdomen",
     description: "Abdomen: metabolism and glycemic control during the mission.",
-    related_indicators: %w[blood_glucose meals_completed_percent]
+    related_indicators: %w[blood_glucose meals_completed_percent hydration_ml]
   },
   {
     name: "limbs",
     description: "Limbs: physical performance, muscle recovery and sleep hours.",
-    related_indicators: %w[sleep_hours]
+    related_indicators: %w[sleep_hours muscle_performance balance]
   }
 ]
 
@@ -153,28 +153,28 @@ research_profiles = {
   critical: {
     saliva_sample_taken: true, virus_reactivation_suspected: false,
     calcium_isotopes_level: 8.6, telomere_length: 4.6, spatial_cognition_score: 62,
-    vestibular_test_passed: true, vision_test_performed: true, oct_scan_result: "normal",
+    vision_test_performed: true, oct_scan_result: "normal",
     b_complex_supplement_taken: true, actigraphy_device_synced: true,
     cognitive_performance_survey_score: 70
   },
   watch: {
     saliva_sample_taken: true, virus_reactivation_suspected: false,
     calcium_isotopes_level: 8.6, telomere_length: 4.6, spatial_cognition_score: 62,
-    vestibular_test_passed: true, vision_test_performed: true, oct_scan_result: "normal",
+    vision_test_performed: true, oct_scan_result: "normal",
     b_complex_supplement_taken: true, actigraphy_device_synced: true,
     cognitive_performance_survey_score: 70
   },
   healthy: {
     saliva_sample_taken: true, virus_reactivation_suspected: false,
     calcium_isotopes_level: 9.2, telomere_length: 6.2, spatial_cognition_score: 85,
-    vestibular_test_passed: true, vision_test_performed: true, oct_scan_result: "normal",
+    vision_test_performed: true, oct_scan_result: "normal",
     b_complex_supplement_taken: true, actigraphy_device_synced: true,
     cognitive_performance_survey_score: 88
   },
   psych: {
     saliva_sample_taken: true, virus_reactivation_suspected: false,
     calcium_isotopes_level: 8.9, telomere_length: 5.1, spatial_cognition_score: 62,
-    vestibular_test_passed: true, vision_test_performed: true, oct_scan_result: "normal",
+    vision_test_performed: true, oct_scan_result: "normal",
     b_complex_supplement_taken: true, actigraphy_device_synced: true,
     cognitive_performance_survey_score: 70
   }
@@ -261,6 +261,27 @@ astronaut_specs.each do |spec|
   astronaut.health_readings.create!(
     indicator_type: "reaction_time", value: reaction_profiles.fetch(spec[:profile]),
     reaction_time_ms: reaction_profiles.fetch(spec[:profile]), data_origin: "simulated", measured_at: Time.current
+  )
+
+  # Experimental indicators: hydration, training-load proxy and balance self-check.
+  # Clamped to today so gamification streaks never depend on the local clock.
+  experimental_times = [ 20, 19, 18 ].map do |hour|
+    [ Time.current - 1.minute, Date.current.beginning_of_day + hour.hours ].min
+  end
+
+  astronaut.health_readings.create!(
+    indicator_type: "hydration_ml", value: 2_400, thirst_score: 3,
+    data_origin: "simulated", measured_at: experimental_times.fetch(0)
+  )
+  astronaut.health_readings.create!(
+    indicator_type: "muscle_performance", value: 55,
+    resistance_minutes: 30, aerobic_minutes: 25,
+    perceived_exertion: 6, muscle_soreness: 2,
+    data_origin: "simulated", measured_at: experimental_times.fetch(1)
+  )
+  astronaut.health_readings.create!(
+    indicator_type: "balance", value: 1, balance_episodes: 0,
+    balance_environment: "earth", data_origin: "simulated", measured_at: experimental_times.fetch(2)
   )
 
   # Evaluación de hoy + una línea base para poder simular el protocolo SANS
