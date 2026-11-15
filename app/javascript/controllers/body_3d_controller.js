@@ -1068,24 +1068,27 @@ export default class extends Controller {
       }[status] || "bg-slate-500/15 text-slate-300 border-slate-500/40"
       const dot = LABEL_DOT_CLASSES[status] || LABEL_DOT_CLASSES.unknown
 
+      const zoneStatusText = `${ZONE_LABELS[zone.name] || zone.name}: ${STATUS_LABELS[status] || status}, ${alerts} alert${alerts === 1 ? "" : "s"}. Show indicators.`
+
       return `
         <button type="button" data-action="click->body-3d#selectZoneFromMap" data-body-3d-zone-param="${this.escape(zone.name)}"
+                aria-label="${this.escape(zoneStatusText)}"
                 class="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2.5 text-left transition hover:border-cyan-500/50">
           <span class="flex min-w-0 items-center gap-2">
-            <span class="h-2 w-2 shrink-0 rounded-full ${dot}"></span>
+            <span class="h-2 w-2 shrink-0 rounded-full ${dot}" aria-hidden="true"></span>
             <span class="min-w-0">
               <span class="block text-sm font-medium text-slate-200">${this.escape(ZONE_LABELS[zone.name] || zone.name)}</span>
               <span class="block text-[10px] text-slate-500">${alerts > 0 ? `${alerts} alert${alerts === 1 ? "" : "s"}` : "No alerts"}</span>
             </span>
           </span>
-          <span class="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase ${badge}">${this.escape(STATUS_LABELS[status] || status)}</span>
+          <span class="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase ${badge}" role="status">${this.escape(STATUS_LABELS[status] || status)}</span>
         </button>
       `
     }).join("")
 
     this.fallbackTarget.innerHTML = `
       ${intro}
-      <p class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">2D body map</p>
+      <p class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">2D map (accessible alternative)</p>
       <div class="space-y-2">${rows || '<p class="text-sm text-slate-400">No zone data yet.</p>'}</div>
     `
   }
