@@ -175,6 +175,11 @@ References: [AHA](https://www.heart.org/en/health-topics/high-blood-pressure) (b
 6. Complete all indicators for the day to unlock achievements.
 7. Query the JSON APIs listed in the architecture section.
 
+### Demo reset and deploy info
+
+- The footer shows the last deploy timestamp and revision. Set `DEPLOYED_AT` and `REVISION` env vars in production (local builds fall back to `.git`).
+- `POST /demo/reset` recreates demo data by re-running `db/seeds.rb`. The button appears in the footer in development/test; in other environments it requires the shared `DEMO_RESET_TOKEN` env var (never enable it without a token in production).
+
 ---
 
 ## 📋 Hackathon Checklist

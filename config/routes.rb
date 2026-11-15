@@ -19,6 +19,9 @@ Rails.application.routes.draw do
   resources :symptom_checks, only: [ :create ]
   resources :wellness_checks, only: [ :create ]
 
+  # Reset protegido de datos de demo (POST + token fuera de development/test).
+  post "demo/reset", to: "demo#reset", as: :demo_reset
+
   # Endpoints consumidos por Three.js y Chart.js.
   namespace :api do
     resource :health_status, only: :show, controller: "health_status"

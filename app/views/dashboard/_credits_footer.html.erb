@@ -47,5 +47,23 @@
     <p class="font-medium text-amber-200">
       Educational prototype, not a medical device. Physiological data is simulated for demonstration; space weather data is live from NASA DONKI API.
     </p>
+    <p>
+      Last deploy: <%= deployed_at ? l(deployed_at, format: :long) : "not available" %>
+      <% if deploy_revision.present? %>· rev <%= deploy_revision %><% end %>
+    </p>
+    <% if demo_reset_enabled? %>
+      <div class="pt-1">
+        <%= form_with url: demo_reset_path, method: :post, class: "flex flex-wrap items-center gap-2" do %>
+          <% if demo_reset_token_required? %>
+            <%= label_tag :demo_reset_token, "Reset token", class: "sr-only" %>
+            <%= password_field_tag :token, params[:token], placeholder: "Reset token",
+                                   class: "rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 text-gray-200 placeholder:text-gray-500" %>
+          <% end %>
+          <%= submit_tag "Reset demo data",
+                         class: "rounded-lg border border-slate-700 px-3 py-1 text-gray-300 hover:bg-slate-800 hover:text-slate-100",
+                         data: { turbo_confirm: "Recreate demo data? Current readings will be replaced." } %>
+        <% end %>
+      </div>
+    <% end %>
   </div>
 </footer>
