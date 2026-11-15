@@ -47,13 +47,13 @@ class HealthReading < ApplicationRecord
     "reaction_time" => "Use the in-app reaction test or the mission cognitive battery. Team-defined research threshold.",
     "meals_completed_percent" => "Estimate the percentage of the planned meals you completed.",
     "social_contact_minutes" => "Log minutes of meaningful contact with the crew or with Earth.",
-    "hydration_ml" => "Log total fluid intake in mL. 2.5 L/day and 0.24 L/h during EVA are crew water supply requirements (OCHMO-TB-027), not a personal clinical target. This app does not diagnose dehydration.",
-    "muscle_performance" => "Log resistance and aerobic minutes, perceived exertion (1-10) and soreness (0-10). Optional external load/reps must come from a device. This is a training-load proxy: the app does not measure strength. IMTP, isokinetic and grip tests require ARED or a dynamometer (NASA NTRS 20230000776).",
-    "balance" => "Log balance episodes and a symptom score (0 best, 10 worst). If you perform a test, use a stable surface and a companion; never in microgravity, immediately after landing, or with discomfort. This is not a validated clinical test. Wood et al. (NTRS 20210017480); Clément et al. 2022 (doi 10.3389/fphys.2022.1029161)."
+    "hydration_ml" => "Log total fluid intake in mL. 2.5 L/day and 0.24 L/h during EVA are crew water supply requirements (OCHMO-TB-027), not a personal clinical target. This app does not diagnose dehydration. Hydration supports countermeasures for headward fluid shifts (NASA HRP Brain Fluid Pressure research).",
+    "muscle_performance" => "Log resistance and aerobic minutes, perceived exertion (1-10) and soreness/weakness (0-10). Optional external load/reps must come from a device. This is a training-load proxy: the app does not measure strength. NASA HRP risk: Reduced Cardiorespiratory and Musculoskeletal Fitness. IMTP, isokinetic and grip tests require ARED or a dynamometer (NASA NTRS 20230000776).",
+    "balance" => "Log balance episodes and a symptom score (0 best, 10 worst). Not applicable in microgravity: if you perform a test, use a stable surface and a companion, never immediately after landing or with discomfort. This is not a validated clinical test. NASA HRP risk: Altered Sensorimotor and Vestibular Function. Wood et al. (NTRS 20210017480); Clément et al. 2022 (doi 10.3389/fphys.2022.1029161)."
   }.freeze
 
   CITATIONS = {
-    "hydration_ml" => "NASA OCHMO, Water - Human Consumption technical brief (OCHMO-TB-027).",
+    "hydration_ml" => "NASA OCHMO, Water - Human Consumption technical brief (OCHMO-TB-027). Fluid-shift context: NASA HRP Brain Fluid Pressure research.",
     "muscle_performance" => "NASA HRP, Space Physiology / CIPHER (NTRS 20230000776).",
     "balance" => "Wood et al., NASA JSC sensorimotor research (NTRS 20210017480); Clément et al., Frontiers in Physiology, 2022 (doi 10.3389/fphys.2022.1029161)."
   }.freeze
