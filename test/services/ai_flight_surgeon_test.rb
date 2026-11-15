@@ -51,6 +51,28 @@ class AiFlightSurgeonTest < ActiveSupport::TestCase
     assert_equal 70, surgeon.calculate_health_score
   end
 
+  test "glucosa crítica genera alerta y resta 30 puntos" do
+    @astronaut.health_readings.create!(
+      indicator_type: "blood_glucose", value: 300, measured_at: Time.current
+    )
+
+    surgeon = AiFlightSurgeon.new(@astronaut, space_weather: [])
+
+    assert(surgeon.generate_report.any? { |line| line.include?("Blood glucose is critical") })
+    assert_equal 70, surgeon.calculate_health_score
+  end
+
+  test "presión diastólica crítica genera alerta y resta 30 puntos" do
+    @astronaut.health_readings.create!(
+      indicator_type: "blood_pressure_diastolic", value: 95, measured_at: Time.current
+    )
+
+    surgeon = AiFlightSurgeon.new(@astronaut, space_weather: [])
+
+    assert(surgeon.generate_report.any? { |line| line.include?("Diastolic BP is critical") })
+    assert_equal 70, surgeon.calculate_health_score
+  end
+
   test "eventos solares generan alerta y restan 20 puntos" do
     surgeon = AiFlightSurgeon.new(@astronaut, space_weather: [ { "sepID" => "SEP-1" } ])
 

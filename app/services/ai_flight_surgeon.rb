@@ -5,6 +5,8 @@
 #   - "sleep_hours"              (horas de sueño)
 #   - "mood_score"               (ánimo 1-10)
 #   - "blood_pressure_systolic"  (presión sistólica mmHg)
+#   - "blood_pressure_diastolic" (presión diastólica mmHg)
+#   - "blood_glucose"            (glucosa mg/dL)
 class AiFlightSurgeon
   SLEEP_THRESHOLD = 6.0
   MOOD_THRESHOLD = 4.0
@@ -25,6 +27,7 @@ class AiFlightSurgeon
     recommendations << sleep_recommendation if sleep_average && sleep_average < SLEEP_THRESHOLD
     recommendations << mood_recommendation if mood_average && mood_average < MOOD_THRESHOLD
     recommendations << systolic_recommendation if systolic_value && systolic_value > SYSTOLIC_THRESHOLD
+    recommendations << diastolic_recommendation if diastolic_critical?
     recommendations << solar_recommendation if solar_events.any?
 
     recommendations.empty? ? [ NOMINAL_RECOMMENDATION ] : recommendations
@@ -139,6 +142,16 @@ class AiFlightSurgeon
   def systolic_recommendation
     "❤️ Systolic BP is elevated (#{systolic_value.round} mmHg). " \
       "Cardiovascular adaptation risk. Recommendation: Rest 5 min, re-measure."
+  end
+
+  def diastolic_recommendation
+    "❤️ Diastolic BP is critical (#{diastolic_value.round} mmHg). " \
+      "Cardiovascular risk. Recommendation: Rest 5 min, re-measure and report if it persists."
+  end
+
+  def glucose_recommendation
+    "🩸 Blood glucose is critical (#{glucose_value.round} mg/dL). " \
+      "Metabolic risk. Recommendation: treat hypoglycemia/hyperglycemia and notify the Flight Surgeon."
   end
 
   def solar_recommendation
