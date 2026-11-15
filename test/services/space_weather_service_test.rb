@@ -24,4 +24,15 @@ class SpaceWeatherServiceTest < ActiveSupport::TestCase
 
     assert_equal [], service.send(:parse_events, '{"error":"unexpected"}')
   end
+
+  test "expone el ultimo error de DONKI en vez de propagarlo" do
+    service = NetworkFailureService.new
+    assert_equal [], service.recent_solar_particles
+    assert_equal "SocketError: network down", service.last_error
+  end
+
+  test "el atajo de clase limpia el error entre consultas" do
+    SpaceWeatherService.reset_provider!
+    assert_nil SpaceWeatherService.last_error
+  end
 end

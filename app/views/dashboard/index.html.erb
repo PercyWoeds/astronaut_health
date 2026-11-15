@@ -254,6 +254,9 @@
           Events detected (last 7 days): <span class="font-bold text-gray-200"><%= solar_events.size %></span>
         </p>
         <p class="mt-1 text-[10px] text-gray-500">Last checked: <%= @space_weather_checked_at.utc.strftime("%H:%M UTC") %></p>
+        <% if @space_weather_error.present? %>
+          <p class="mt-1 text-[10px] text-amber-300">DONKI link error: <%= @space_weather_error %>. Showing no events until the next successful check.</p>
+        <% end %>
       </div>
     </section>
 

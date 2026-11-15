@@ -24,6 +24,7 @@ class DashboardController < ApplicationController
     # Rule-Based Flight Surgeon + clima espacial (DONKI). Una sola llamada HTTP por render.
     @space_weather_events = @astronaut ? SpaceWeatherService.recent_solar_particles : []
     @space_weather_checked_at = Time.current
+    @space_weather_error = SpaceWeatherService.last_error
     @rule_based_flight_surgeon = @astronaut ? RuleBasedFlightSurgeon.new(@astronaut, space_weather: @space_weather_events) : nil
     @rule_based_recommendations = @rule_based_flight_surgeon ? @rule_based_flight_surgeon.generate_report : []
     @health_score = @rule_based_flight_surgeon ? @rule_based_flight_surgeon.calculate_health_score : 100

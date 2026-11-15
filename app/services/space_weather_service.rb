@@ -16,15 +16,23 @@ class SpaceWeatherService
     # Seam para tests o entornos sin red: si se define, se usa en vez de HTTP.
     attr_writer :provider
 
+    # Último error de red/parseo de DONKI (nil cuando la consulta ok).
+    attr_reader :last_error
+
     # Atajo de clase usado por el DashboardController y el Rule-Based Flight Surgeon.
     def recent_solar_particles(days: 7, now: Time.current)
+      @last_error = nil
       return Array(@provider.call) if @provider
 
-      new(days: days, now: now).recent_solar_particles
+      instance = new(days: days, now: now)
+      events = instance.recent_solar_particles
+      @last_error = instance.last_error
+      events
     end
 
     def reset_provider!
       @provider = nil
+      @last_error = nil
     end
   end
 
@@ -33,11 +41,15 @@ class SpaceWeatherService
     @now = now
   end
 
+  attr_reader :last_error
+
   def recent_solar_particles
+    @last_error = nil
     Rails.cache.fetch(cache_key, expires_in: CACHE_TTL) { fetch_events }
   rescue StandardError => e
     # Cualquier fallo de red/parseo degrada a "sin eventos" para no romper el dashboard.
-    Rails.logger.warn("[SpaceWeatherService] #{e.class}: #{e.message}")
+    @last_error = "#{e.class}: #{e.message}"
+    Rails.logger.warn("[SpaceWeatherService] #{@last_error}")
     []
   end
 
@@ -58,7 +70,10 @@ class SpaceWeatherService
       http.get(uri.request_uri, { "Accept" => "application/json" })
     end
 
-    return [] unless response.is_a?(Net::HTTPSuccess)
+    unless response.is_a?(Net::HTTPSuccess)
+      @last_error = "DONKI responded HTTP #{response.code}"
+      return []
+    end
 
     parse_events(response.body)
   end
