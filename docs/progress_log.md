@@ -33,7 +33,7 @@ Stack: Rails 8.1, PostgreSQL, Stimulus, Turbo, Three.js, Chart.js, Tailwind.
 - [x] Security & robustness: per-IP Rack rate limiter (app/middleware/rate_limiter.rb, env-tunable, off in test), strong params, text length limits (notes 1_000), CSRF token on every fetch.
 
 ## Phase 4: Tests, README & Handover
-- [ ] Comprehensive Minitest suite.
-- [ ] Manual browser validation.
-- [ ] README update.
-- [ ] Final handover report.
+- [x] Comprehensive Minitest suite. 119 runs / 527 assertions, 0 failures (models, services, middleware, integration incl. API + all form flows). No Capybara system tests: no browser available in this environment.
+- [x] Manual validation. HTTP smoke against the dev server: pages 200, CSRF POST 201, APIs 200 (chart_data 13 datasets, hrp_risks 5), demo reset 302 + re-seed, rate limiter 429 after 300 req/min. Interactive WebGL pass still recommended on a machine with a browser.
+- [x] README update. Architecture tree refreshed, 13 indicators, plausibility/offline/rate-limiting moved to Covered, seeds count corrected (185 readings).
+- [x] Final handover report. docs/handover_report.md (run steps, honesty about real vs simulated data, validation log, limitations, deploy notes).

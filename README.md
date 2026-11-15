@@ -103,30 +103,46 @@ Open http://localhost:3000.
 ```text
 app/
 ├── controllers/
-│   ├── dashboard_controller.rb          # main view
-│   ├── health_readings_controller.rb    # new / create / index
+│   ├── dashboard_controller.rb          # main view + aggregated data
+│   ├── health_readings_controller.rb    # new / create / index / destroy
+│   ├── demo_controller.rb               # POST /demo/reset (protected)
+│   ├── ground_reports_controller.rb     # flight surgeon escalation
+│   ├── {daily_checks,research_assessments,biomarker_samples,journal_entries,
+│   │   pre_eva_checks,symptom_checks,wellness_checks}_controller.rb
 │   └── api/
-│       ├── health_status_controller.rb  # GET /api/health_status
-│       └── health_readings_controller.rb# GET /api/health_readings/chart_data
-├── javascript/controllers/
-│   ├── body_3d_controller.js            # Three.js + Raycaster
-│   ├── health_form_controller.js        # modal + fetch POST
-│   ├── health_charts_controller.js      # Chart.js
-│   └── mission_selector_controller.js   # mission/astronaut selector
+│       ├── health_status_controller.rb  # GET /api/health_status (zone status)
+│       ├── health_readings_controller.rb# GET /api/health_readings[/chart_data]
+│       └── hrp_risks_controller.rb      # GET /api/hrp_risks
+├── middleware/
+│   └── rate_limiter.rb                  # per-IP fixed-window Rack limiter
 ├── models/
-│   ├── mission.rb
-│   ├── astronaut.rb
-│   ├── health_reading.rb
-│   ├── body_zone.rb
-│   ├── achievement.rb
-│   └── astronaut_achievement.rb
+│   ├── health_reading.rb                # EAV reading + 3-layer validation
+│   ├── daily_check.rb / research_assessment.rb / biomarker_sample.rb
+│   ├── journal_entry.rb / symptom_check.rb / pre_eva_check.rb
+│   ├── alert.rb / baseline.rb / indicator.rb / body_zone.rb
+│   └── mission.rb / astronaut.rb / achievement.rb / astronaut_achievement.rb
+│       / ground_report.rb / symptom_report.rb
 ├── services/
 │   ├── health_evaluator.rb              # value -> green/yellow/red
+│   ├── anomaly_detector.rb              # clinical anomaly -> watch/action alert
 │   ├── recommendation_engine.rb         # action per indicator/status
-│   ├── gamification_service.rb          # achievements
-│   └── health_snapshot.rb               # aggregated zone status
+│   ├── rule_based_flight_surgeon.rb     # report + health score
+│   ├── health_snapshot.rb               # aggregated zone status
+│   ├── hrp_risk_panel.rb                # 5 HRP hazards per indicator
+│   ├── gamification_service.rb          # points/achievements/streaks
+│   ├── measurement_reminders.rb / comm_delay.rb / action_follow_up.rb
+│   ├── space_weather_service.rb         # NASA DONKI client
+│   └── baseline_calculator.rb
+├── javascript/controllers/              # Stimulus (StimulusReflex-free)
+│   ├── body_3d_controller.js            # Three.js + Raycaster + 2D fallback
+│   ├── health_form_controller.js        # modal + fetch POST + offline queue
+│   ├── offline_controller.js            # link badge + localStorage queue
+│   ├── health_charts_controller.js      # Chart.js
+│   └── mission_selector, tabs, modal, slider, disclosure, sos, reaction_test,
+│       hrp_risks, environment controllers
 └── views/
-    ├── dashboard/index.html.erb         # 3D scene, panel, charts, modal
+    ├── dashboard/index.html.erb         # 3D scene, summary strip, modals
+    ├── dashboard/_*.html.erb            # partials per feature + footer
     └── health_readings/{new,index}.html.erb
 ```
 
@@ -174,7 +190,7 @@ References: [AHA](https://www.heart.org/en/health-topics/high-blood-pressure) (b
 
 ## ✅ Verification (End-to-End)
 
-1. `bin/rails db:create db:migrate db:seed` creates 2 missions, 4 astronauts and 160 readings.
+1. `bin/rails db:create db:migrate db:seed` creates 2 missions, 4 astronauts and 185 readings.
 2. Open `/`: 3D body, overall red, chest/abdomen red, head/limbs yellow (Ana Ríos, critical profile).
 3. Switch to "Mars Transit Analog 2027" and "Yuki Tanaka": body, panel, points and charts update to a healthy state. Switch to "Léa Dubois" for the psychosocial risk case.
 4. Drag to rotate, zoom, click a zone: the panel shows indicators, values, status and recommendation.
@@ -193,7 +209,7 @@ References: [AHA](https://www.heart.org/en/health-topics/high-blood-pressure) (b
 
 **Covered**
 
-- ☑ Registration of 10 indicator types (systolic/diastolic blood pressure, heart rate, glucose, temperature, sleep, mood, reaction time, meals completed, social contact).
+- ☑ Registration of 13 indicator types (systolic/diastolic blood pressure, heart rate, glucose, temperature, sleep, mood, reaction time, meals completed, social contact, hydration, muscle performance, balance).
 - ☑ 3D interactive human body with Raycaster and clickable zones.
 - ☑ Side panel with zone, indicators, values, status, reason and recommendation.
 - ☑ Green/yellow/red color coding per zone and indicator.
