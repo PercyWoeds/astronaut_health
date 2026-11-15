@@ -47,6 +47,36 @@ class HealthReadingsValidationTest < ActionDispatch::IntegrationTest
     assert_match "Please confirm", response.body
   end
 
+  test "clinically abnormal reading raises a watch alert" do
+    assert_difference -> { @astronaut.alerts.count }, 1 do
+      post health_readings_path,
+           params: {
+             astronaut_id: @astronaut.id,
+             health_reading: { indicator_type: "heart_rate", value: 110, unit: "bpm" }
+           },
+           as: :json
+    end
+
+    assert_response :created
+    alert = @astronaut.alerts.order(:created_at).last
+    assert_equal "watch", alert.level
+    assert_equal "absolute", alert.basis
+  end
+
+  test "critical anomaly raises an action alert" do
+    assert_difference -> { @astronaut.alerts.count }, 1 do
+      post health_readings_path,
+           params: {
+             astronaut_id: @astronaut.id,
+             health_reading: { indicator_type: "heart_rate", value: 150, unit: "bpm" }
+           },
+           as: :json
+    end
+
+    assert_response :created
+    assert_equal "action", @astronaut.alerts.order(:created_at).last.level
+  end
+
   test "implausible reading is rejected with the accepted range" do
     assert_no_difference -> { @astronaut.health_readings.count } do
       post health_readings_path,

@@ -53,7 +53,7 @@ class AnomalyDetector
     alert.update!(
       level: level,
       basis: reading.baseline_reference ? "baseline" : "absolute",
-      note: "Lectura #{reading.value} #{reading.unit}"
+      note: "Reading #{reading.value} #{reading.unit}"
     )
   end
 

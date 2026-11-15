@@ -24,13 +24,13 @@ Stack: Rails 8.1, PostgreSQL, Stimulus, Turbo, Three.js, Chart.js, Tailwind.
 - [x] Balance & Vestibular: dizziness/motion sickness (0-10), disorientation episodes count. Stance test (sec, eyes open/closed) intentionally dropped together with the vestibular checkbox (commit 0ea47aa). "Not applicable in microgravity" tag. Limbs zone (performance metric) instead of Head subelement. HRP Altered Sensorimotor and Vestibular Function.
 
 ## Phase 3: Self-Evaluation, Validation & UX (P1)
-- [ ] Provenance tags: manual, simulated, device-recorded, lab-result, calculated. Mark calcium, telomeres, OCT, bone loss as "lab-result".
-- [ ] Measurement guides: dropdown per indicator, when/why/how/link.
-- [ ] 3-layer validation & bounds: reject impossible, confirm extreme possible (flag confirmed), accept/alert clinical anomalies. Team-defined plausibility limits.
-- [ ] Summary & status logic: primary action, score capping on Medical evaluation, deductions breakdown, Latest alerts, baseline & % deviation, symptoms "Nothing to report" + timestamp, DONKI UTC timestamp & fallback, dashed threshold/baseline lines on charts.
-- [ ] Accessibility & fallbacks: icons+text, keyboard nav, high contrast, 2D body canvas fallback.
-- [ ] Offline mode: ServiceWorker, local queue, sync on reconnect.
-- [ ] Security & robustness: Rails rate_limit, strong params, text length limits, CSRF on fetch.
+- [x] Provenance tags: manual, simulated, device-recorded, lab-result, calculated. Calcium, telomeres, OCT and bone loss labeled "Lab result" in the form. (HealthReading DATA_ORIGINS; lab badges in daily check / research / biomarker modals; origin select in the form.)
+- [x] Measurement guides: per-indicator guide text and citation, shown in the form from GUIDES/CITATIONS (health_reading.rb).
+- [x] 3-layer validation & bounds: PLAUSIBILITY_RANGES reject impossible values, CONFIRMATION_RANGES require explicit confirmation for extreme-but-possible (flagged "confirmed"), and clinically abnormal readings raise watch/action alerts. (HealthReading validations; AnomalyDetector wired via after_create; team-defined limits.)
+- [x] Summary & status logic: primary action card, score capped at 69 while a zone is red, deductions breakdown, latest alerts sorted by severity, baseline deviation notes, symptoms "Nothing to report" + timestamp, DONKI UTC timestamp with error fallback, dashed threshold/baseline chart lines.
+- [x] Accessibility & fallbacks: icons+text, keyboard nav, aria labels, high-contrast pills, 2D body map fallback toggle. (Commits c339c38, 21d1cf7.)
+- [x] Offline mode: ServiceWorker caches the app shell (public/service-worker.js); offline_controller.js queues readings in localStorage and syncs on reconnect; badge + toast UI.
+- [x] Security & robustness: per-IP Rack rate limiter (app/middleware/rate_limiter.rb, env-tunable, off in test), strong params, text length limits (notes 1_000), CSRF token on every fetch.
 
 ## Phase 4: Tests, README & Handover
 - [ ] Comprehensive Minitest suite.

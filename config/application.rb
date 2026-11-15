@@ -23,5 +23,7 @@ module AstronautHealth
     #
     config.time_zone = "Lima"
     # config.eager_load_paths << Rails.root.join("extras")
+    # Rate limiting por IP se registra en config/initializers/rate_limiter.rb
+    # (el middleware vive en app/middleware/rate_limiter.rb).
   end
 end

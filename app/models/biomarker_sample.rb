@@ -10,6 +10,7 @@ class BiomarkerSample < ApplicationRecord
 
   validates :sample_type, inclusion: { in: SAMPLE_TYPES.keys }
   validates :collected_at, presence: true
+  validates :notes, length: { maximum: 1_000 }
 
   before_validation :set_collected_at
 

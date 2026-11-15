@@ -161,6 +161,7 @@ class HealthReading < ApplicationRecord
   before_validation :compute_experimental_value
   before_validation :mark_device_recorded_external_load
   before_validation :evaluate_status
+  after_create :detect_anomaly
 
   scope :chronological, -> { order(measured_at: :asc, id: :asc) }
   scope :recent_first, -> { order(measured_at: :desc, id: :desc) }
@@ -306,6 +307,12 @@ class HealthReading < ApplicationRecord
     end
 
     { datasets: datasets }
+  end
+
+  # Capa 3 de validación: el valor se acepta (es plausible) pero si es clínicamente
+  # anormal se levanta una alerta (watch/action) contra el indicador.
+  def detect_anomaly
+    AnomalyDetector.evaluate(self)
   end
 
   private

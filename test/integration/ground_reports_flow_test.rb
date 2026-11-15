@@ -8,8 +8,12 @@ class GroundReportsFlowTest < ActionDispatch::IntegrationTest
   end
 
   test "crea un GroundReport desde el boton del cirujano" do
-    assert_difference [ "GroundReport.count", "Alert.count" ], 1 do
-      post ground_reports_path, params: { astronaut_id: @astronaut.id, summary: "Reporte de prueba" }
+    # La lectura anormal del setup ya levantó una alerta "action" abierta;
+    # el reporte se adjunta a esa alerta existente en lugar de duplicarla.
+    assert_no_difference -> { Alert.count } do
+      assert_difference "GroundReport.count", 1 do
+        post ground_reports_path, params: { astronaut_id: @astronaut.id, summary: "Reporte de prueba" }
+      end
     end
     report = GroundReport.last
     assert_equal "sent", report.status
@@ -19,5 +23,6 @@ class GroundReportsFlowTest < ActionDispatch::IntegrationTest
     assert_in_delta report.created_at.to_f + expected_delay, report.earliest_reply_at.to_f, 2
     gr = report.alert
     assert_equal "mars", gr.astronaut.destination
+    assert_equal "action", gr.level
   end
 end

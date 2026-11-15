@@ -216,15 +216,15 @@
       </div>
 
       <%# 2. Overall Status ---------- %>
-      <div class="rounded-2xl border border-cyan-900 bg-gray-800 p-5 font-mono shadow-xl">
+      <div class="rounded-2xl border border-cyan-900 bg-gray-800 p-6 font-mono shadow-xl">
         <h2 class="text-sm font-semibold uppercase tracking-wider text-cyan-300">🚦 Overall Status</h2>
         <div class="mt-4 flex justify-center">
-          <div class="flex h-32 w-32 flex-col items-center justify-center rounded-full border-4 <%= overall_tone %>">
-            <span class="text-2xl font-bold"><%= status_label_es(overall) %></span>
-            <span class="mt-0.5 text-[10px] uppercase tracking-wider opacity-80"><%= alert_zones.size %> zone<%= "s" unless alert_zones.size == 1 %></span>
+          <div class="flex w-full flex-col items-center justify-center gap-1 rounded-xl border-2 bg-gray-900 px-4 py-5 text-center <%= overall_tone %>">
+            <span class="text-xl font-bold leading-tight"><%= status_label_es(overall) %></span>
+            <span class="text-[10px] uppercase tracking-wider opacity-80"><%= alert_zones.size %> zone<%= "s" unless alert_zones.size == 1 %></span>
           </div>
         </div>
-        <p class="mt-3 text-center text-[11px] leading-relaxed text-gray-400"><%= overall_detail %></p>
+        <p class="mt-3 text-center text-xs leading-relaxed text-gray-400"><%= overall_detail %></p>
       </div>
 
       <%# 3. Main Action (top Flight Surgeon recommendation) ---------- %>
