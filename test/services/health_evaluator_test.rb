@@ -5,12 +5,21 @@ class HealthEvaluatorTest < ActiveSupport::TestCase
     HealthEvaluator.new(HealthReading.new(indicator_type: type, value: value)).status
   end
 
-  test "evalúa presión sistólica" do
-    assert_equal "green", status_for("blood_pressure_systolic", 120)
+  test "evalúa presión sistólica con umbrales AHA" do
+    assert_equal "green", status_for("blood_pressure_systolic", 118)
+    assert_equal "yellow", status_for("blood_pressure_systolic", 120)
     assert_equal "yellow", status_for("blood_pressure_systolic", 135)
     assert_equal "yellow", status_for("blood_pressure_systolic", 88)
     assert_equal "red", status_for("blood_pressure_systolic", 145)
     assert_equal "red", status_for("blood_pressure_systolic", 80)
+  end
+
+  test "clasifica la presión arterial según AHA" do
+    assert_equal "Normal", HealthEvaluator.blood_pressure_category(118, 76)
+    assert_equal "Elevated", HealthEvaluator.blood_pressure_category(124, 76)
+    assert_equal "Stage 1 Hypertension", HealthEvaluator.blood_pressure_category(134, 82)
+    assert_equal "Stage 2 Hypertension", HealthEvaluator.blood_pressure_category(145, 92)
+    assert_equal "Hypertensive Crisis", HealthEvaluator.blood_pressure_category(185, 122)
   end
 
   test "evalúa presión diastólica" do
@@ -229,5 +238,24 @@ class HealthEvaluatorTest < ActiveSupport::TestCase
     assert_equal "red", summary[:zone_statuses]["head"]
     assert_equal "red", summary[:zone_statuses]["immune"]
     assert_equal "yellow", summary[:zone_statuses]["chest"]
+  end
+
+  test "un valor extremo confirmado fuerza estado rojo y nota crítica" do
+    astronaut = research_astronaut
+    reading = astronaut.health_readings.new(indicator_type: "heart_rate", value: 200, confirmed: true)
+    reading.valid?
+
+    evaluator = HealthEvaluator.new(reading)
+
+    assert evaluator.confirmed_extreme?
+    assert_equal "red", evaluator.status
+    assert_equal HealthEvaluator::CONFIRMED_EXTREME_NOTE, evaluator.explanation
+    assert_equal "urgent", RecommendationEngine.for(reading)[:urgency]
+  end
+
+  test "un valor extremo sin confirmar no se marca como confirmado" do
+    reading = HealthReading.new(indicator_type: "heart_rate", value: 200)
+
+    refute HealthEvaluator.new(reading).confirmed_extreme?
   end
 end

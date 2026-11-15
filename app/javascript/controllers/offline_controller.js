@@ -31,7 +31,7 @@ export default class extends Controller {
 
     this.onOffline = () => {
       this.updateBadge(true)
-      this.showToast("📡 Enlace perdido con Tierra", "Modo autónomo activado. Los datos se guardarán en este dispositivo.", "amber")
+      this.showToast("📡 Link with Earth lost", "Autonomous mode enabled. Data will be stored on this device.", "amber")
     }
 
     this.onOnline = () => {
@@ -63,6 +63,8 @@ export default class extends Controller {
       value: data.get("health_reading[value]"),
       unit: data.get("health_reading[unit]") || "",
       measured_at: data.get("health_reading[measured_at]") || new Date().toISOString(),
+      is_baseline: data.get("health_reading[is_baseline]") === "1",
+      confirmed: data.get("health_reading[confirmed]") === "1",
       // Guardamos la URL con misión/astronauta para no mezclar colas si el
       // usuario cambia de selección antes de recuperar el enlace.
       sync_url: this.urlValue,
@@ -75,8 +77,8 @@ export default class extends Controller {
     this.updatePendingCount()
 
     this.showToast(
-      "Sin conexión. Datos guardados localmente.",
-      "Se sincronizarán al recuperar el enlace.",
+      "Offline. Data saved locally.",
+      "They will sync when the link is restored.",
       "amber"
     )
 
@@ -104,7 +106,7 @@ export default class extends Controller {
         document.dispatchEvent(new CustomEvent("health:reading-created", { detail: data }))
         synced += 1
       } catch (error) {
-        console.error("No se pudo sincronizar una medición offline", error)
+        console.error("Could not sync an offline measurement", error)
         remaining.push(reading)
       }
     }
@@ -115,8 +117,8 @@ export default class extends Controller {
 
     if (synced > 0) {
       this.showToast(
-        "✅ Enlace restablecido",
-        `${synced} medición(es) sincronizada(s) con Houston.`,
+        "✅ Link restored",
+        `${synced} measurement(s) synced with Houston.`,
         "emerald"
       )
     }
@@ -128,6 +130,8 @@ export default class extends Controller {
     body.append("health_reading[value]", reading.value)
     body.append("health_reading[unit]", reading.unit)
     body.append("health_reading[measured_at]", reading.measured_at)
+    body.append("health_reading[is_baseline]", reading.is_baseline ? "1" : "0")
+    body.append("health_reading[confirmed]", reading.confirmed ? "1" : "0")
 
     return fetch(reading.sync_url || this.urlValue, {
       method: "POST",
@@ -154,7 +158,7 @@ export default class extends Controller {
     }
 
     if (this.hasLabelTarget) {
-      this.labelTarget.textContent = offline ? "⚠️ Modo Autónomo (Offline)" : "📡 Enlace con Tierra: ACTIVO"
+      this.labelTarget.textContent = offline ? "⚠️ Autonomous mode (Offline)" : "📡 Link with Earth: ACTIVE"
     }
   }
 
@@ -162,7 +166,7 @@ export default class extends Controller {
     if (!this.hasPendingTarget) return
 
     const count = this.readQueue().length
-    this.pendingTarget.textContent = `${count} en cola`
+    this.pendingTarget.textContent = `${count} queued`
     this.pendingTarget.classList.toggle("hidden", count === 0)
     this.pendingTarget.classList.toggle("inline-flex", count > 0)
   }
@@ -188,7 +192,7 @@ export default class extends Controller {
       const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]")
       return Array.isArray(parsed) ? parsed : []
     } catch (error) {
-      console.error("No se pudo leer la cola offline", error)
+      console.error("Could not read offline queue", error)
       return []
     }
   }
@@ -197,7 +201,7 @@ export default class extends Controller {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(queue))
     } catch (error) {
-      console.error("No se pudo guardar la cola offline", error)
+      console.error("Could not save offline queue", error)
     }
   }
 }

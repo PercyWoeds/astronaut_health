@@ -6,7 +6,7 @@ class BiomarkerSamplesController < ApplicationController
     @sample = @astronaut.biomarker_samples.new(biomarker_sample_params)
 
     if @sample.save
-      redirect_to dashboard_path, notice: "Muestra registrada: #{@sample.type_label}."
+      redirect_to dashboard_path, notice: "Sample recorded: #{@sample.type_label}."
     else
       redirect_to dashboard_path, alert: @sample.errors.full_messages.to_sentence
     end
@@ -18,7 +18,7 @@ class BiomarkerSamplesController < ApplicationController
     @astronaut = requested_astronaut
     return if @astronaut
 
-    redirect_to root_path, alert: "No hay astronauta configurado. Ejecuta rails db:seed."
+    redirect_to root_path, alert: "No astronaut configured. Run rails db:seed."
   end
 
   def biomarker_sample_params

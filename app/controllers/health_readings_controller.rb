@@ -27,8 +27,10 @@ class HealthReadingsController < ApplicationController
     @reading = @astronaut.health_readings.new(reading_params)
 
     if @reading.save
+      create_critical_alert_if_needed
       awarded = GamificationService.new(@astronaut).call
       status = HealthEvaluator.new(@reading).status
+      warning = duplicate_warning
 
       respond_to do |format|
         format.json do
@@ -36,6 +38,7 @@ class HealthReadingsController < ApplicationController
             reading: reading_payload(@reading),
             recommendation: RecommendationEngine.for(@reading),
             status: status,
+            warning: warning,
             awarded_achievements: awarded.map do |achievement|
               { name: achievement.name, description: achievement.description, points: achievement.points }
             end,
@@ -44,7 +47,7 @@ class HealthReadingsController < ApplicationController
         end
 
         format.html do
-          redirect_to root_path(astronaut_id: @astronaut.id), notice: "Medición registrada (#{@reading.indicator_label}: #{@reading.value} #{@reading.unit})."
+          redirect_to root_path(astronaut_id: @astronaut.id), notice: [ "Measurement recorded (#{@reading.indicator_label}: #{@reading.value} #{@reading.unit}).", warning ].compact.join(" ")
         end
       end
     else
@@ -58,14 +61,48 @@ class HealthReadingsController < ApplicationController
     end
   end
 
+  def destroy
+    @astronaut = target_astronaut
+    @reading = @astronaut.health_readings.find(params[:id])
+    @reading.destroy!
+
+    respond_to do |format|
+      format.html do
+        redirect_to root_path(mission_id: current_mission&.id, astronaut_id: @astronaut.id),
+                    notice: "Last reading undone."
+      end
+      format.json { head :no_content }
+    end
+  end
+
   private
+
+  def create_critical_alert_if_needed
+    return unless @reading.confirmed? && @reading.extreme_value?
+
+    indicator = Indicator.find_by(key: @reading.indicator_type)
+    return unless indicator
+
+    alert = @astronaut.alerts.find_or_initialize_by(indicator: indicator, status: "open")
+    alert.update!(
+      level: "action",
+      basis: "absolute",
+      note: "Confirmed extreme value: #{@reading.value} #{@reading.unit}"
+    )
+  end
+
+  def duplicate_warning
+    return nil unless @reading.duplicate_of_recent_reading
+
+    "Warning: a very similar reading was recorded less than 5 minutes before this one. Please verify it is not a duplicate."
+  end
 
   def ensure_astronaut!
     return if target_astronaut
 
     respond_to do |format|
-      format.json { render json: { error: "No hay astronauta configurado. Ejecuta rails db:seed." }, status: :not_found }
-      format.html { redirect_to root_path, alert: "No hay astronauta configurado. Ejecuta rails db:seed." }
+      format.json { render json: { error: "No astronaut configured. Run rails db:seed." }, status: :not_found }
+      format.html { redirect_to root_path, alert: "No astronaut configured. Run rails db:seed." }
     end
   end
 
@@ -75,7 +112,7 @@ class HealthReadingsController < ApplicationController
 
   def reading_params
     params.require(:health_reading).permit(
-      :indicator_type, :value, :unit, :measured_at, :is_baseline,
+      :indicator_type, :value, :unit, :measured_at, :is_baseline, :confirmed,
       :reaction_time_ms, :meals_completed_percent, :social_contact_minutes
     )
   end
@@ -88,6 +125,8 @@ class HealthReadingsController < ApplicationController
       value: reading.value,
       unit: reading.unit,
       status: reading.status,
+      confirmed: reading.confirmed?,
+      extreme: reading.extreme_value?,
       measured_at: reading.measured_at.iso8601,
       recommendation: RecommendationEngine.for(reading)
     }

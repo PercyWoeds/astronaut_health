@@ -31,7 +31,7 @@ export default class extends Controller {
       this.fillSelect()
       this.renderSelected()
     } catch (error) {
-      console.error("No se pudo cargar chart_data", error)
+      console.error("Could not load chart_data", error)
       this.showEmpty(true)
     }
   }
@@ -44,7 +44,7 @@ export default class extends Controller {
       .join("")
 
     if (this.datasets.length === 0) {
-      this.selectTarget.innerHTML = '<option value="">Sin datos</option>'
+      this.selectTarget.innerHTML = '<option value="">No data</option>'
       return
     }
 
@@ -67,24 +67,41 @@ export default class extends Controller {
     const statusColors = { green: "#34d399", yellow: "#fbbf24", red: "#fb7185" }
     const pointColors = dataset.statuses.map((status) => statusColors[status] || "#94a3b8")
 
+    const chartDatasets = [{
+      label: `${dataset.label} (${dataset.unit})`,
+      data: dataset.data,
+      borderColor: "#22d3ee",
+      backgroundColor: "rgba(34, 211, 238, 0.12)",
+      fill: true,
+      tension: 0.35,
+      borderWidth: 2,
+      pointRadius: 5,
+      pointHoverRadius: 7,
+      pointBackgroundColor: pointColors,
+      pointBorderColor: "#0f172a",
+      pointBorderWidth: 2
+    }]
+
+    // Referencia visual: umbral de hipertensión etapa 2 (AHA) en sistólica.
+    if (selectedType === "blood_pressure_systolic") {
+      chartDatasets.push({
+        label: "Reference 140 mmHg",
+        data: dataset.data.map(() => 140),
+        borderColor: "#fb7185",
+        borderDash: [6, 4],
+        borderWidth: 1.5,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        fill: false,
+        tension: 0
+      })
+    }
+
     this.chart = new window.Chart(this.canvasTarget, {
       type: "line",
       data: {
         labels: dataset.labels,
-        datasets: [{
-          label: `${dataset.label} (${dataset.unit})`,
-          data: dataset.data,
-          borderColor: "#22d3ee",
-          backgroundColor: "rgba(34, 211, 238, 0.12)",
-          fill: true,
-          tension: 0.35,
-          borderWidth: 2,
-          pointRadius: 5,
-          pointHoverRadius: 7,
-          pointBackgroundColor: pointColors,
-          pointBorderColor: "#0f172a",
-          pointBorderWidth: 2
-        }]
+        datasets: chartDatasets
       },
       options: {
         responsive: true,
@@ -139,7 +156,7 @@ export default class extends Controller {
           <span class="h-1.5 w-1.5 rounded-full ${dotClasses[reading.status] || "bg-slate-400"}"></span>${this.escape(reading.status)}
         </span>
       </td>
-      <td class="py-2.5 text-slate-400">${date.toLocaleString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
+      <td class="py-2.5 text-slate-400">${date.toLocaleString("en-US", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
     `
     this.tableBodyTarget.prepend(row)
 

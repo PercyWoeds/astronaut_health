@@ -8,13 +8,13 @@
 <div class="mx-auto max-w-5xl px-4 py-10">
   <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <div>
-      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-400">Historial</p>
-      <h1 class="mt-1 text-2xl font-bold text-white">Mediciones registradas</h1>
+      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-400">History</p>
+      <h1 class="mt-1 text-2xl font-bold text-white">Recorded readings</h1>
       <p class="mt-1 text-sm text-slate-400"><%= @astronaut.name %> · <%= @astronaut.mission.name %></p>
     </div>
     <div class="flex gap-3">
       <%= link_to "← Dashboard", root_path(mission_id: @astronaut.mission_id, astronaut_id: @astronaut.id), class: "rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800" %>
-      <%= link_to "+ Nueva medición", new_health_reading_path(mission_id: @astronaut.mission_id, astronaut_id: @astronaut.id), class: "rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-cyan-400" %>
+      <%= link_to "+ New reading", new_health_reading_path(mission_id: @astronaut.mission_id, astronaut_id: @astronaut.id), class: "rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-cyan-400" %>
     </div>
   </div>
 
@@ -22,11 +22,11 @@
     <table class="min-w-full divide-y divide-slate-800 text-sm">
       <thead>
         <tr class="text-left text-xs uppercase tracking-wider text-slate-500">
-          <th class="pb-2 pr-4 font-medium">Indicador</th>
-          <th class="pb-2 pr-4 font-medium">Valor</th>
-          <th class="pb-2 pr-4 font-medium">Estado</th>
-          <th class="pb-2 pr-4 font-medium">Unidad</th>
-          <th class="pb-2 font-medium">Fecha</th>
+          <th class="pb-2 pr-4 font-medium">Indicator</th>
+          <th class="pb-2 pr-4 font-medium">Value</th>
+          <th class="pb-2 pr-4 font-medium">Status</th>
+          <th class="pb-2 pr-4 font-medium">Unit</th>
+          <th class="pb-2 font-medium">Date</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-800/70">
@@ -36,6 +36,9 @@
               <%= reading.indicator_label %>
               <% if reading.is_baseline? %>
                 <span class="ml-1 rounded-full border border-cyan-500/40 bg-cyan-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-cyan-200">pre</span>
+              <% end %>
+              <% if reading.confirmed? %>
+                <span class="ml-1 rounded-full border border-rose-500/40 bg-rose-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-rose-200">confirmed</span>
               <% end %>
             </td>
             <td class="py-2.5 pr-4 font-medium text-slate-100"><%= reading.value %></td>
@@ -49,7 +52,7 @@
           </tr>
         <% end %>
         <% if @readings.empty? %>
-          <tr><td colspan="5" class="py-6 text-center text-slate-500">Sin mediciones todavía.</td></tr>
+          <tr><td colspan="5" class="py-6 text-center text-slate-500">No readings yet.</td></tr>
         <% end %>
       </tbody>
     </table>

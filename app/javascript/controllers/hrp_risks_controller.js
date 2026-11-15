@@ -19,9 +19,9 @@ const BADGE_CLASSES = {
 
 const STATUS_LABELS = {
   green: "Normal",
-  yellow: "Vigilar",
-  red: "Crítico",
-  unknown: "Sin datos"
+  yellow: "Watch",
+  red: "Critical",
+  unknown: "No data"
 }
 
 const ALL_BAR_CLASSES = Object.values(BAR_CLASSES).flat()
@@ -47,7 +47,7 @@ export default class extends Controller {
       const payload = await response.json()
       ;(payload.risks || []).forEach((risk) => this.update(risk))
     } catch (error) {
-      console.error("No se pudo actualizar el panel HRP", error)
+      console.error("Could not update HRP panel", error)
     }
   }
 

@@ -7,7 +7,7 @@ class DailyChecksController < ApplicationController
     @daily_check = @astronaut.daily_checks.find_or_initialize_by(checked_on: Date.current)
 
     if @daily_check.update(daily_check_params)
-      redirect_to dashboard_path, notice: "Chequeo diario guardado para #{@daily_check.checked_on.strftime('%d/%m/%Y')}."
+      redirect_to dashboard_path, notice: "Daily check saved for #{@daily_check.checked_on.strftime('%d/%m/%Y')}."
     else
       redirect_to dashboard_path, alert: @daily_check.errors.full_messages.to_sentence
     end
@@ -19,7 +19,7 @@ class DailyChecksController < ApplicationController
     @astronaut = requested_astronaut
     return if @astronaut
 
-    redirect_to root_path, alert: "No hay astronauta configurado. Ejecuta rails db:seed."
+    redirect_to root_path, alert: "No astronaut configured. Run rails db:seed."
   end
 
   def daily_check_params

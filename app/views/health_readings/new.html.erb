@@ -6,14 +6,14 @@
 
 <div class="mx-auto max-w-xl px-4 py-10">
   <div class="mb-6 flex items-center justify-between">
-    <%= link_to "← Volver al dashboard", root_path(mission_id: @astronaut.mission_id, astronaut_id: @astronaut.id), class: "text-sm text-cyan-400 hover:text-cyan-300" %>
+    <%= link_to "← Back to dashboard", root_path(mission_id: @astronaut.mission_id, astronaut_id: @astronaut.id), class: "text-sm text-cyan-400 hover:text-cyan-300" %>
     <span class="text-xs uppercase tracking-wider text-slate-500"><%= @astronaut.name %> · <%= @astronaut.mission.name %></span>
   </div>
 
   <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl">
-    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-400">Nueva medición</p>
-    <h1 class="mt-1 text-2xl font-bold text-white">Registrar indicador de salud</h1>
-    <p class="mt-2 text-sm text-slate-400">El status se calcula automáticamente según los umbrales de HealthEvaluator.</p>
+    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-400">New reading</p>
+    <h1 class="mt-1 text-2xl font-bold text-white">Log health indicator</h1>
+    <p class="mt-2 text-sm text-slate-400">The status is calculated automatically based on HealthEvaluator thresholds.</p>
 
     <%= form_with model: @reading, url: health_readings_path(mission_id: @astronaut.mission_id, astronaut_id: @astronaut.id), class: "mt-6 space-y-4" do |form| %>
       <% if @reading.errors.any? %>
@@ -27,7 +27,7 @@
       <% end %>
 
       <div>
-        <%= form.label :indicator_type, "Indicador", class: "mb-1 block text-sm font-medium text-slate-300" %>
+        <%= form.label :indicator_type, "Indicator", class: "mb-1 block text-sm font-medium text-slate-300" %>
         <%= form.select :indicator_type,
               @indicator_options.map { |type, config| ["#{config[:label]} (#{config[:unit]})", type] },
               {},
@@ -36,29 +36,48 @@
 
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <%= form.label :value, "Valor", class: "mb-1 block text-sm font-medium text-slate-300" %>
+          <%= form.label :value, "Value", class: "mb-1 block text-sm font-medium text-slate-300" %>
           <%= form.number_field :value, step: "0.1", class: "w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500" %>
         </div>
         <div>
-          <%= form.label :unit, "Unidad", class: "mb-1 block text-sm font-medium text-slate-300" %>
-          <%= form.text_field :unit, class: "w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500" %>
+          <%= form.label :unit, "Unit", class: "mb-1 block text-sm font-medium text-slate-300" %>
+          <%= form.select :unit,
+                HealthReading::UNIT_CHOICES.map { |unit| [unit, unit] },
+                { selected: @reading.unit },
+                class: "w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500" %>
         </div>
       </div>
 
+      <% help_indicator = @reading.indicator_type.presence || HealthReading::INDICATOR_TYPES.first %>
+      <% help_range = HealthReading.expected_range_for(help_indicator) %>
+      <% if help_range %>
+        <p data-health-form-target="help" class="text-[11px] leading-relaxed text-slate-500">
+          Expected range: <%= help_range.min %>–<%= help_range.max %> <%= HealthReading::INDICATORS.dig(help_indicator, :unit) %>
+        </p>
+      <% end %>
+
       <div>
-        <%= form.label :measured_at, "Fecha y hora", class: "mb-1 block text-sm font-medium text-slate-300" %>
-        <%= form.datetime_local_field :measured_at, class: "w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500" %>
+        <%= form.label :measured_at, "Date and time", class: "mb-1 block text-sm font-medium text-slate-300" %>
+        <%= form.datetime_local_field :measured_at, max: Time.current.strftime("%Y-%m-%dT%H:%M"), class: "w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500" %>
       </div>
 
       <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3 hover:border-cyan-500/40">
         <%= form.check_box :is_baseline, class: "mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-900 accent-cyan-500" %>
         <span>
-          <span class="block text-sm font-medium text-slate-200">Lectura pre-vuelo (baseline)</span>
-          <span class="block text-[11px] text-slate-500">Referencia para detectar desviaciones &gt; 20 % durante la misión.</span>
+          <span class="block text-sm font-medium text-slate-200">Pre-flight reading (baseline)</span>
+          <span class="block text-[11px] text-slate-500">Reference to detect deviations &gt; 20% during the mission.</span>
         </span>
       </label>
 
-      <%= form.submit "Guardar medición",
+      <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3 hover:border-cyan-500/40">
+        <%= form.check_box :confirmed, class: "mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-900 accent-cyan-500" %>
+        <span>
+          <span class="block text-sm font-medium text-slate-200">Confirm extreme value</span>
+          <span class="block text-[11px] text-slate-500">Check only if the value is outside the confirmation limits but is real.</span>
+        </span>
+      </label>
+
+      <%= form.submit "Save reading",
             class: "w-full cursor-pointer rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-slate-950 hover:bg-cyan-400" %>
     <% end %>
   </div>

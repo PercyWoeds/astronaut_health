@@ -8,7 +8,7 @@ class GroundReportsController < ApplicationController
       indicator = worst_indicator
       if indicator.nil?
         return redirect_to root_path(mission_id: @astronaut.mission_id, astronaut_id: @astronaut.id),
-                           alert: "Catálogo de indicadores vacío. Ejecuta rails db:seed."
+                           alert: "Indicator catalog is empty. Run rails db:seed."
       end
 
       alert = @astronaut.alerts.create!(indicator: indicator, level: "action", basis: "absolute", status: "open")
@@ -17,7 +17,7 @@ class GroundReportsController < ApplicationController
     report = GroundReport.create_for_alert(alert, summary: params[:summary])
 
     redirect_to root_path(mission_id: @astronaut.mission_id, astronaut_id: @astronaut.id),
-                notice: "Informe enviado a la Tierra. Respuesta estimada a las #{report.earliest_reply_at.to_time.strftime('%H:%M')}."
+                notice: "Report sent to Earth. Estimated reply at #{report.earliest_reply_at.to_time.strftime('%H:%M')}."
   rescue ActiveRecord::RecordInvalid => e
     redirect_to root_path(mission_id: @astronaut.mission_id, astronaut_id: @astronaut.id),
                 alert: e.record.errors.full_messages.to_sentence
@@ -29,7 +29,7 @@ class GroundReportsController < ApplicationController
     @astronaut = requested_astronaut
     return if @astronaut
 
-    redirect_to root_path, alert: "No hay astronauta configurado. Ejecuta rails db:seed."
+    redirect_to root_path, alert: "No astronaut configured. Run rails db:seed."
   end
 
   def worst_indicator

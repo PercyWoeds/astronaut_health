@@ -37,14 +37,18 @@ system font stack (`ui-sans-serif`, `system-ui`, sans-serif).
 - **AHA** — blood pressure: <https://www.heart.org/en/health-topics/high-blood-pressure>
 - **ADA** — blood glucose: <https://diabetes.org/about-diabetes/diagnosis>
 - **WHO** — hypertension and general health parameters: <https://www.who.int/news-room/fact-sheets/detail/hypertension>
-- **NASA HRP** — human health and performance risks in spaceflight: <https://humanresearchroadmap.nasa.gov/>
+
+Design informed by **NASA HRP** — human health and performance risks in
+spaceflight: <https://humanresearchroadmap.nasa.gov/>. NASA HRP does not provide
+the numeric thresholds used here: they are general references and team-defined
+ranges.
 
 These thresholds are orientative for an educational prototype and must be
 validated by a flight surgeon before any real use.
 
 ## Disclaimer
 
-**Educational prototype, not a medical device. All data is simulated.**
+**Educational prototype, not a medical device. Physiological data is simulated for demonstration; space weather data is live from NASA DONKI API.**
 
 This project is not affiliated with, endorsed by, or certified by NASA. It was
 built for the NASA Space Apps Challenge. Names, missions, and health readings

@@ -58,6 +58,6 @@ class FlightStudyFlowsTest < ActionDispatch::IntegrationTest
     reading = @astronaut.health_readings.where(indicator_type: "heart_rate").recent_first.first
 
     assert_equal "yellow", reading.status
-    assert_includes response.parsed_body.dig("recommendation", "text"), "línea base pre-vuelo"
+    assert_includes response.parsed_body.dig("recommendation", "text"), "pre-flight baseline"
   end
 end

@@ -2,25 +2,25 @@ import { Controller } from "@hotwired/stimulus"
 
 const ENVIRONMENTS = {
   iss: {
-    delay: "1.3s",
-    radiation: "Baja",
+    delay: "< 1 s",
+    radiation: "Low",
     tone: "green",
     progress: 20,
-    protocol: "Contact Flight Surgeon (Delay: 1.3s)"
+    protocol: "One-way delay: < 1 s. Autonomous protocol active."
   },
   moon: {
-    delay: "1.3s",
-    radiation: "Media",
+    delay: "1.3 s",
+    radiation: "Medium",
     tone: "yellow",
     progress: 50,
-    protocol: "Contact Flight Surgeon (Delay: 1.3s)"
+    protocol: "One-way delay: 1.3 s. Autonomous protocol active."
   },
   mars: {
     delay: "20 min",
-    radiation: "Alta",
+    radiation: "High",
     tone: "red",
     progress: 85,
-    protocol: "Contact Flight Surgeon (Delay: 20 min)"
+    protocol: "One-way delay: 20 min. Autonomous protocol active."
   }
 }
 
@@ -54,7 +54,7 @@ export default class extends Controller {
     this.updateRadiation(environment)
 
     if (this.hasDelayNoteTarget) {
-      this.delayNoteTarget.textContent = `Retraso con la Tierra: ${environment.delay}`
+      this.delayNoteTarget.textContent = `Delay with Earth: ${environment.delay}`
     }
 
     if (this.hasProtocolTarget) {
@@ -67,7 +67,7 @@ export default class extends Controller {
     if (!row) return
 
     const value = row.querySelector("[data-hrp-value]")
-    if (value) value.textContent = `Retraso: ${environment.delay}`
+    if (value) value.textContent = `Delay: ${environment.delay}`
   }
 
   updateRadiation(environment) {

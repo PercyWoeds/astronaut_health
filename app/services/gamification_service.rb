@@ -4,16 +4,16 @@
 class GamificationService
   # Catálogo de logros disponibles.
   CATALOG = [
-    { key: "first_reading", name: "Primer registro", points: 10,
-      description: "Registraste tu primera medición de salud en la herramienta." },
-    { key: "daily_checkup", name: "Chequeo diario completo", points: 50,
-      description: "Completaste todos los indicadores en un mismo día." },
-    { key: "streak_3", name: "Racha de 3 días", points: 100,
-      description: "Tres días consecutivos con chequeo completo." },
-    { key: "streak_7", name: "Racha de 7 días", points: 250,
-      description: "Una semana completa de monitorización constante." },
-    { key: "perfect_day", name: "Día en verde", points: 75,
-      description: "Todos tus indicadores del día estuvieron en rango verde." }
+    { key: "first_reading", name: "First reading", points: 10,
+      description: "You logged your first health measurement in the tool." },
+    { key: "daily_checkup", name: "Complete daily check", points: 50,
+      description: "You completed all indicators on the same day." },
+    { key: "streak_3", name: "3-day streak", points: 100,
+      description: "Three consecutive days with a complete check." },
+    { key: "streak_7", name: "7-day streak", points: 250,
+      description: "A full week of steady monitoring." },
+    { key: "perfect_day", name: "Green day", points: 75,
+      description: "All of your indicators were in the green range today." }
   ].freeze
 
   attr_reader :astronaut, :date

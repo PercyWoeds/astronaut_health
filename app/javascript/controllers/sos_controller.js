@@ -9,9 +9,9 @@ import { Controller } from "@hotwired/stimulus"
 const DURATION = 3000
 
 const START_MESSAGE =
-  "Transmitiendo telemetría a Houston... Retraso de 20 min."
+  "Transmitting telemetry to Houston... 20 min delay."
 const END_MESSAGE =
-  "✅ Mensaje en cola. Retraso estimado: 20 minutos. Mantenga la calma y siga el protocolo."
+  "✅ Message queued. Estimated delay: 20 minutes. Stay calm and follow the protocol."
 
 const MESSAGE_START_CLASSES = ["border-rose-500/25", "bg-rose-500/5", "text-rose-100"]
 const MESSAGE_END_CLASSES = ["border-emerald-500/30", "bg-emerald-500/10", "text-emerald-200"]
@@ -52,7 +52,7 @@ export default class extends Controller {
   reset() {
     this.barTarget.style.width = "0%"
     this.percentTarget.textContent = "0%"
-    this.stageTarget.textContent = "Empaquetando telemetría…"
+    this.stageTarget.textContent = "Packaging telemetry…"
     this.messageTarget.textContent = START_MESSAGE
     this.messageTarget.classList.remove(...MESSAGE_END_CLASSES)
     this.messageTarget.classList.add(...MESSAGE_START_CLASSES)
@@ -70,11 +70,11 @@ export default class extends Controller {
       this.percentTarget.textContent = `${percent}%`
 
       if (elapsed < 1200) {
-        this.stageTarget.textContent = "Empaquetando telemetría…"
+        this.stageTarget.textContent = "Packaging telemetry…"
       } else if (elapsed < 2400) {
-        this.stageTarget.textContent = "Estableciendo enlace de alta prioridad…"
+        this.stageTarget.textContent = "Establishing high-priority link…"
       } else if (elapsed < DURATION) {
-        this.stageTarget.textContent = "Transmitiendo a Houston…"
+        this.stageTarget.textContent = "Transmitting to Houston…"
       }
 
       if (ratio < 1) {
@@ -88,7 +88,7 @@ export default class extends Controller {
   }
 
   finish() {
-    this.stageTarget.textContent = "Transmisión completada · Tempus Pro"
+    this.stageTarget.textContent = "Transmission complete · Tempus Pro"
     this.messageTarget.textContent = END_MESSAGE
     this.messageTarget.classList.remove(...MESSAGE_START_CLASSES)
     this.messageTarget.classList.add(...MESSAGE_END_CLASSES)

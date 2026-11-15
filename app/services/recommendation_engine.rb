@@ -1,58 +1,58 @@
-# Genera una recomendación operativa concreta según el indicador y su semáforo.
-# No sustituye el criterio médico: en rojo siempre se indica contactar al Flight Surgeon.
+# Generates a concrete operational recommendation from the indicator and status.
+# It does not replace medical judgement: red always points to the Flight Surgeon.
 class RecommendationEngine
-  # Acciones por indicador y status. El texto está pensado para leerse rápido
-  # en un panel de cabina, con verbos de acción y pasos medibles.
+  # Actions per indicator and status. The text is written to be read quickly
+  # on a cockpit panel, with action verbs and measurable steps.
   RECOMMENDATIONS = {
     "blood_pressure_systolic" => {
-      "green" => "Mantener hidratación y rutina de ejercicio contra resistencia. Remedir en el próximo chequeo.",
-      "yellow" => "Reposo 5 min, verificar manguito y remedir. Registrar segunda lectura. Evitar cafeína y esfuerzo.",
-      "red" => "Reposo inmediato y remedir en 5 min. Si persiste > 140 o < 85 mmHg, contactar al Flight Surgeon."
+      "green" => "Maintain hydration and a resistance exercise routine. Re-measure at the next check.",
+      "yellow" => "Rest 5 min, verify the cuff and re-measure. Record a second reading. Avoid caffeine and exertion.",
+      "red" => "Rest immediately and re-measure in 5 min. If it persists > 140 or < 85 mmHg, report to the Flight Surgeon."
     },
     "blood_pressure_diastolic" => {
-      "green" => "Sin acción. Continuar monitorización diaria.",
-      "yellow" => "Reposo 5 min y repetir medición con el brazo a la altura del corazón.",
-      "red" => "Remedir tras 5 min de reposo. Si persiste >= 90 o < 50 mmHg, contactar al Flight Surgeon."
+      "green" => "No action. Continue daily monitoring.",
+      "yellow" => "Rest 5 min and repeat the measurement with the arm at heart level.",
+      "red" => "Re-measure after 5 min of rest. If it persists >= 90 or < 50 mmHg, report to the Flight Surgeon."
     },
     "heart_rate" => {
-      "green" => "Sin acción. Mantener rutina cardiovascular y de sueño.",
-      "yellow" => "Valorar estrés, hidratación y descanso. Reposo 5 min y remedir.",
-      "red" => "Detener actividad, reposo y remedir. Si persiste > 130 o < 40 bpm o hay síntomas, contactar al Flight Surgeon."
+      "green" => "No action. Maintain the cardiovascular and sleep routine.",
+      "yellow" => "Assess stress, hydration and rest. Rest 5 min and re-measure.",
+      "red" => "Stop activity, rest and re-measure. If it persists > 130 or < 40 bpm or symptoms appear, report to the Flight Surgeon."
     },
     "blood_glucose" => {
-      "green" => "Mantener patrón de comidas y registrar tendencia.",
-      "yellow" => "Revisar última ingesta y actividad. Remedir en 30 min. Si < 70 mg/dL, consumir 15 g de carbohidrato.",
-      "red" => "Si < 54 mg/dL: tratar hipoglucemia de inmediato y avisar. Si >= 250 mg/dL: hidratación y contactar al Flight Surgeon."
+      "green" => "Maintain the meal pattern and record the trend.",
+      "yellow" => "Review the last intake and activity. Re-measure in 30 min. If < 70 mg/dL, consume 15 g of carbohydrate.",
+      "red" => "If < 54 mg/dL: treat hypoglycemia immediately and notify. If >= 250 mg/dL: hydrate and report to the Flight Surgeon."
     },
     "body_temperature" => {
-      "green" => "Sin acción. Continuar monitorización.",
-      "yellow" => "Hidratación, reposo y remedir en 30 min. Vigilar síntomas de infección.",
-      "red" => "Activar protocolo de aislamiento si hay fiebre. Contactar al Flight Surgeon y monitorizar cada 30 min."
+      "green" => "No action. Continue monitoring.",
+      "yellow" => "Hydration, rest and re-measure in 30 min. Watch for signs of infection.",
+      "red" => "Activate the isolation protocol if there is fever. Report to the Flight Surgeon and monitor every 30 min."
     },
     "sleep_hours" => {
-      "green" => "Mantener horario de sueño y higiene del descanso.",
-      "yellow" => "Priorizar una siesta de 20-30 min y reducir luz/estimulación antes del descanso.",
-      "red" => "Déficit severo de sueño: suspender tareas críticas, informar al equipo y programar descanso obligatorio."
+      "green" => "Maintain a sleep schedule and rest hygiene.",
+      "yellow" => "Prioritize a 20-30 min nap and reduce light/stimulation before rest.",
+      "red" => "Severe sleep deficit: suspend critical tasks, notify the team and schedule mandatory rest."
     },
     "mood_score" => {
-      "green" => "Mantener rutina de contacto con familia y actividades de recuperación.",
-      "yellow" => "Programar una conversación con el equipo y una actividad de recuperación. Registrar evolución.",
-      "red" => "Riesgo psicosocial elevado: contactar al Flight Surgeon/psicólogo y activar protocolo de apoyo."
+      "green" => "Maintain a routine of family contact and recovery activities.",
+      "yellow" => "Schedule a conversation with the team and a recovery activity. Record progress.",
+      "red" => "Elevated psychosocial risk: report to the Flight Surgeon/psychologist and activate the support protocol."
     },
     "reaction_time" => {
-      "green" => "Rendimiento cognitivo dentro de rango. Repetir el test en el próximo chequeo.",
-      "yellow" => "Fatiga cognitiva detectada. Se recomienda descanso (CIPHER / Spatial Cognition).",
-      "red" => "Fatiga cognitiva marcada: suspender tareas críticas, descansar y repetir el test."
+      "green" => "Cognitive performance within range. Repeat the test at the next check.",
+      "yellow" => "Cognitive fatigue detected. Rest is recommended (CIPHER / Spatial Cognition).",
+      "red" => "Marked cognitive fatigue: suspend critical tasks, rest and repeat the test."
     },
     "meals_completed_percent" => {
-      "green" => "Ingesta adecuada. Mantener el plan de comidas de la misión.",
-      "yellow" => "Riesgo de Nutrición Inadecuada. Completar las comidas restantes y registrar la ingesta.",
-      "red" => "Riesgo de Nutrición Inadecuada. Revisar el plan con el equipo y valorar suplementación."
+      "green" => "Adequate intake. Maintain the mission meal plan.",
+      "yellow" => "Inadequate Nutrition risk. Complete the remaining meals and record intake.",
+      "red" => "Inadequate Nutrition risk. Review the plan with the team and consider supplementation."
     },
     "social_contact_minutes" => {
-      "green" => "Contacto social adecuado. Mantener la rutina de interacción con la tripulación.",
-      "yellow" => "Riesgo de Aislamiento (ARCHeR). Programar contacto con la tripulación y con Tierra.",
-      "red" => "Aislamiento crítico: activar protocolo psicosocial y contacto inmediato con Tierra."
+      "green" => "Adequate social contact. Maintain the crew interaction routine.",
+      "yellow" => "Isolation risk (ARCHeR). Schedule contact with the crew and Earth.",
+      "red" => "Critical isolation: activate the psychosocial protocol and contact Earth immediately."
     }
   }.freeze
 
@@ -62,9 +62,17 @@ class RecommendationEngine
     @reading = reading
   end
 
-  # Devuelve { text:, urgency:, escalate: }.
+  # Returns { text:, urgency:, escalate: }.
   # urgency: :routine | :watch | :urgent
   def call
+    if HealthEvaluator.new(reading).confirmed_extreme?
+      return {
+        text: HealthEvaluator::CONFIRMED_EXTREME_NOTE,
+        urgency: "urgent",
+        escalate: true
+      }
+    end
+
     if baseline_deviation?
       return {
         text: HealthEvaluator::BASELINE_PROTOCOL,
@@ -74,7 +82,7 @@ class RecommendationEngine
     end
 
     text = RECOMMENDATIONS.dig(reading.indicator_type, reading.status) ||
-           "Sin recomendación específica. Registrar y consultar al Flight Surgeon."
+           "No specific recommendation. Record the value and consult the Flight Surgeon."
 
     {
       text: text,

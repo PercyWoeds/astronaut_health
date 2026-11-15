@@ -5,7 +5,7 @@ Rails.application.routes.draw do
   root "dashboard#index"
 
   # Captura y consulta de mediciones (responde HTML y JSON).
-  resources :health_readings, only: [ :new, :create, :index ]
+  resources :health_readings, only: [ :new, :create, :index, :destroy ]
 
   # Informe de tierra para alertas críticas.
   resources :ground_reports, only: [ :create ]

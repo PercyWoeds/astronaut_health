@@ -17,15 +17,21 @@ class DashboardController < ApplicationController
 
     @current_day = Date.current
     @pending_measurements = @astronaut ? MeasurementReminders.call(@astronaut, day: @current_day) : []
-    @comm_delay_text = @astronaut ? CommDelay.call(@astronaut) : nil
+    @comm_delay_text = @astronaut ? CommDelay.text_for(@astronaut) : nil
     @critical_alert = @astronaut ? Alert.open_for_astronaut(@astronaut).action.first : nil
 
     # AI Flight Surgeon + clima espacial (DONKI). Una sola llamada HTTP por render.
     @space_weather_events = @astronaut ? SpaceWeatherService.recent_solar_particles : []
+    @space_weather_checked_at = Time.current
     @ai_flight_surgeon = @astronaut ? AiFlightSurgeon.new(@astronaut, space_weather: @space_weather_events) : nil
     @ai_recommendations = @ai_flight_surgeon ? @ai_flight_surgeon.generate_report : []
     @health_score = @ai_flight_surgeon ? @ai_flight_surgeon.calculate_health_score : 100
+    # Mientras haya una zona crítica, el score se limita para no mostrar un
+    # número "aceptable" (p. ej. 70) junto a un estado Critical.
+    @health_score_capped = @snapshot&.dig(:overall_status) == "red" && @health_score > 69
+    @health_score = 69 if @health_score_capped
     @ai_critical = @ai_flight_surgeon ? @ai_flight_surgeon.critical? : false
+    @health_score_discounts = health_score_discounts(@ai_flight_surgeon)
 
     # Chequeo diario (valores de hoy o del último registro como referencia).
     @daily_check = if @astronaut
@@ -58,5 +64,49 @@ class DashboardController < ApplicationController
     return unless params[:astronaut_id].present?
 
     @astronauts.find_by(id: params[:astronaut_id])
+  end
+
+  # Desglose de los descuentos aplicados al Crew Health Score (para el botón "Why?").
+  def health_score_discounts(surgeon)
+    return [] unless surgeon
+
+    discounts = []
+    sleep_average = surgeon.sleep_average
+    mood_average = surgeon.mood_average
+    systolic_value = surgeon.systolic_value
+    diastolic_value = surgeon.diastolic_value
+    glucose_value = surgeon.glucose_value
+
+    if sleep_average && sleep_average < AiFlightSurgeon::SLEEP_THRESHOLD
+      discounts << { label: "Sleep below #{AiFlightSurgeon::SLEEP_THRESHOLD.to_i} h",
+                     detail: "#{sleep_average.round(1)} h average", points: 20 }
+    end
+
+    if mood_average && mood_average < AiFlightSurgeon::MOOD_THRESHOLD
+      discounts << { label: "Mood below #{AiFlightSurgeon::MOOD_THRESHOLD.to_i}/10",
+                     detail: "#{mood_average.round(1)}/10 average", points: 20 }
+    end
+
+    if systolic_value && systolic_value > AiFlightSurgeon::SYSTOLIC_THRESHOLD
+      discounts << { label: "Systolic BP above #{AiFlightSurgeon::SYSTOLIC_THRESHOLD} mmHg",
+                     detail: "#{systolic_value.round} mmHg", points: 30 }
+    end
+
+    if surgeon.diastolic_critical?
+      discounts << { label: "Diastolic BP critical",
+                     detail: "#{diastolic_value.round} mmHg", points: 30 }
+    end
+
+    if surgeon.glucose_critical?
+      discounts << { label: "Glucose critical",
+                     detail: "#{glucose_value.round} mg/dL", points: 30 }
+    end
+
+    if Array(@space_weather_events).any?
+      discounts << { label: "DONKI solar alert",
+                     detail: "#{Array(@space_weather_events).size} event(s)", points: 20 }
+    end
+
+    discounts
   end
 end

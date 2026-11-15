@@ -6,7 +6,7 @@ class JournalEntriesController < ApplicationController
     @entry = @astronaut.journal_entries.new(journal_entry_params)
 
     if @entry.save
-      redirect_to dashboard_path, notice: "Entrada del diario guardada. Registrar emociones ayuda a mitigar el aislamiento."
+      redirect_to dashboard_path, notice: "Journal entry saved. Recording emotions helps mitigate isolation."
     else
       redirect_to dashboard_path, alert: @entry.errors.full_messages.to_sentence
     end
@@ -18,7 +18,7 @@ class JournalEntriesController < ApplicationController
     @astronaut = requested_astronaut
     return if @astronaut
 
-    redirect_to root_path, alert: "No hay astronauta configurado. Ejecuta rails db:seed."
+    redirect_to root_path, alert: "No astronaut configured. Run rails db:seed."
   end
 
   def journal_entry_params

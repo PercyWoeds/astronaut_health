@@ -12,11 +12,12 @@
 class HrpRiskPanel
   # Valores simulados de la misión. Ajústalos si quieres contar otra historia
   # en la demo (por ejemplo, una tormenta solar durante la presentación).
+  # El límite de 150 mSv es una referencia simulada: no proviene de una norma
+  # NASA citable, se marca como tal en la UI.
   RADIATION_DOSE_MSV = 18.6
   RADIATION_LIMIT_MSV = 150.0
-  NEUTRON_DOSE_MSV = 5.5
   NEUTRON_SHARE_PERCENT = 30
-  SIGNAL_DELAY_MINUTES = 20
+  # 40 min de retardo se considera el límite de confort operativo de la demo.
   SIGNAL_DELAY_COMFORT_MINUTES = 40
 
   def initialize(astronaut)
@@ -45,17 +46,17 @@ class HrpRiskPanel
   end
 
   # 1. Radiación: sin sensor real en el MVP, se simula dosis acumulada.
-  # CSA/CANS: ~30% de la dosis en la ISS corresponde a neutrones.
+  # CSA: ~30% de la dosis en la ISS corresponde a neutrones.
   def radiation_risk
     ratio = RADIATION_DOSE_MSV / RADIATION_LIMIT_MSV
     {
       key: "radiation",
-      name: "Radiación",
+      name: "Radiation",
       icon: "☢️",
-      value_label: "#{format_number(RADIATION_DOSE_MSV)} / #{format_number(RADIATION_LIMIT_MSV)} mSv",
-      detail: "Dosis acumulada estimada (simulada)",
-      note: "Incluye ~#{format_number(NEUTRON_DOSE_MSV)} mSv de neutrones (CSA/CANS)",
-      hint: "Aproximadamente el #{NEUTRON_SHARE_PERCENT}% de la radiación en la ISS es de neutrones (CSA/CANS).",
+      value_label: "#{format_number(RADIATION_DOSE_MSV)} mSv",
+      detail: "Illustrative limit: #{format_number(RADIATION_LIMIT_MSV)} mSv (simulated, no NASA citation)",
+      note: "Estimation: ~#{NEUTRON_SHARE_PERCENT}% of dose are neutrons (CSA).",
+      hint: "About #{NEUTRON_SHARE_PERCENT}% of radiation on the ISS is neutrons (CSA/CANS).",
       status: status_for_ratio(ratio, yellow_at: 0.5, red_at: 0.8),
       progress: percent(ratio)
     }
@@ -68,11 +69,11 @@ class HrpRiskPanel
       value = daily_check.stress_level.to_f
       return {
         key: "isolation",
-        name: "Aislamiento / confinamiento",
+        name: "Isolation / confinement",
         icon: "🧠",
-        value_label: "Estrés #{format_number(value)} / 10",
-        detail: "Riesgo psicosocial · chequeo diario",
-        note: daily_check.stress_level > 7 ? "Estrés elevado: activar protocolo psicosocial." : nil,
+        value_label: "Stress #{format_number(value)} / 10",
+        detail: "Psychosocial risk · daily check",
+        note: daily_check.stress_level > 7 ? "High stress: activate the psychosocial protocol." : nil,
         hint: nil,
         status: daily_field_status("stress_level"),
         progress: percent(value / 10.0)
@@ -80,15 +81,15 @@ class HrpRiskPanel
     end
 
     reading = readings["mood_score"]
-    return unknown_risk("isolation", "Aislamiento / confinamiento", "🧠", "Sin dato de estado de ánimo") unless reading
+    return unknown_risk("isolation", "Isolation / confinement", "🧠", "No mood data") unless reading
 
     value = reading.value.to_f
     {
       key: "isolation",
-      name: "Aislamiento / confinamiento",
+      name: "Isolation / confinement",
       icon: "🧠",
-      value_label: "Ánimo #{format_number(value)} / 10",
-      detail: "Riesgo psicosocial · seguimiento HRP",
+      value_label: "Mood #{format_number(value)} / 10",
+      detail: "Psychosocial risk · HRP monitoring",
       note: nil,
       hint: nil,
       status: reading.status,
@@ -96,15 +97,17 @@ class HrpRiskPanel
     }
   end
 
-  # 3. Distancia a la Tierra: retardo de comunicaciones simulado.
+  # 3. Distancia a la Tierra: retardo de comunicaciones (one-way) según destino.
+  # ISS ~0 s (órbita baja), Luna ~1.3 s y Marte ~20 min.
   def distance_risk
-    ratio = SIGNAL_DELAY_MINUTES.to_f / SIGNAL_DELAY_COMFORT_MINUTES
+    seconds = CommDelay.seconds_for(@astronaut)
+    ratio = seconds / (SIGNAL_DELAY_COMFORT_MINUTES * 60.0)
     {
       key: "distance",
-      name: "Distancia a la Tierra",
+      name: "Distance to Earth",
       icon: "🛰️",
-      value_label: "Retraso: #{SIGNAL_DELAY_MINUTES} min",
-      detail: "Enlace unidireccional con Houston",
+      value_label: "Delay: #{delay_label(seconds)}",
+      detail: "One-way link with Houston",
       note: nil,
       hint: nil,
       status: status_for_ratio(ratio, yellow_at: 0.5, red_at: 0.85),
@@ -119,28 +122,28 @@ class HrpRiskPanel
       value = daily_check.bone_density_loss_percent.to_f
       return {
         key: "gravity",
-        name: "Campos gravitatorios",
+        name: "Gravitational fields",
         icon: "🧲",
-        value_label: "Pérdida ósea #{format_number(value)} %",
-        detail: "Microgravedad · masa ósea",
-        note: "Riesgo de osteoporosis acelerada. Datos ISS/CSA aplicables en Tierra.",
-        hint: nil,
+        value_label: "Bone loss #{format_number(value)} %",
+        detail: "Microgravity · bone mass · entered from exam",
+        note: "Accelerated osteoporosis risk. ISS/CSA data applicable on Earth.",
+        hint: "Value entered from a medical exam (e.g., DEXA). The app does not measure bone density.",
         status: daily_field_status("bone_density_loss_percent"),
         progress: percent(value / 2.5)
       }
     end
 
     reading = readings["sleep_hours"]
-    return unknown_risk("gravity", "Campos gravitatorios", "🧲", "Sin dato de horas de sueño") unless reading
+    return unknown_risk("gravity", "Gravitational fields", "🧲", "No sleep hours data") unless reading
 
     value = reading.value.to_f
     {
       key: "gravity",
-      name: "Campos gravitatorios",
+      name: "Gravitational fields",
       icon: "🧲",
-      value_label: "#{format_number(value)} h de sueño",
-      detail: "Microgravedad · pérdida de masa ósea",
-      note: nil,
+      value_label: "Bone loss risk: ~1-2% monthly (NASA HRP).",
+      detail: "Microgravity · bone mass loss",
+      note: "Sleep logged: #{format_number(value)} h (load countermeasure proxy).",
       hint: nil,
       status: reading.status,
       progress: percent((8.0 - value) / 8.0)
@@ -154,11 +157,11 @@ class HrpRiskPanel
       value = daily_check.co2_level.to_i
       return {
         key: "environment",
-        name: "Entorno cerrado",
+        name: "Closed environment",
         icon: "🌡️",
         value_label: "CO₂ #{value} ppm",
-        detail: "Calidad de aire · módulo presurizado",
-        note: value > 1_000 ? "CO₂ por encima del objetivo. Revisar ventilación y filtros." : nil,
+        detail: "Air quality · target < 1,000 ppm",
+        note: value > 1_000 ? "CO₂ above the 1,000 ppm target (NASA-STD-3001). Check ventilation and filters." : nil,
         hint: nil,
         status: daily_field_status("co2_level"),
         progress: percent(value / 3_000.0)
@@ -166,15 +169,15 @@ class HrpRiskPanel
     end
 
     reading = readings["body_temperature"]
-    return unknown_risk("environment", "Entorno cerrado", "🌡️", "Sin dato de temperatura corporal") unless reading
+    return unknown_risk("environment", "Closed environment", "🌡️", "No body temperature data") unless reading
 
     value = reading.value.to_f
     {
       key: "environment",
-      name: "Entorno cerrado",
+      name: "Closed environment",
       icon: "🌡️",
       value_label: "#{format_number(value)} °C",
-      detail: "Temperatura corporal · riesgo de infección",
+      detail: "Body temperature · infection risk",
       note: nil,
       hint: nil,
       status: reading.status,
@@ -183,7 +186,7 @@ class HrpRiskPanel
   end
 
   def unknown_risk(key, name, icon, detail)
-    { key: key, name: name, icon: icon, value_label: "Sin datos", detail: detail, status: "unknown", progress: 0, note: nil, hint: nil }
+    { key: key, name: name, icon: icon, value_label: "No data", detail: detail, status: "unknown", progress: 0, note: nil, hint: nil }
   end
 
   def status_for_ratio(ratio, yellow_at:, red_at:)
@@ -199,5 +202,12 @@ class HrpRiskPanel
 
   def format_number(value)
     value.to_f % 1 == 0 ? value.to_i.to_s : format("%.1f", value)
+  end
+
+  def delay_label(seconds)
+    return "< 1 s" if seconds < 1
+    return "#{format('%.1f', seconds)} s" if seconds < 60
+
+    "#{(seconds / 60.0).round} min"
   end
 end

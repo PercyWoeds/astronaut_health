@@ -1,71 +1,99 @@
-# 🚀 Quipu Space — Health Monitoring for Space Missions
+# 🚀 Quipu Health— Health Monitoring for Space Missions
 
-**NASA Space Apps Challenge 2026 - Challenge: Create Health Monitoring Software for Astronauts on Space Missions**
+**NASA Space Apps Challenge 2026 — Challenge: Create Health Monitoring Software for Astronauts on Space Missions**
 
 [![Rails](https://img.shields.io/badge/Rails-8.1-red)](https://rubyonrails.org)
 [![Three.js](https://img.shields.io/badge/Three.js-0.160-black)](https://threejs.org)
 [![Tailwind](https://img.shields.io/badge/Tailwind-4.0-blue)](https://tailwindcss.com)
 [![NASA HRP](https://img.shields.io/badge/NASA-Human%20Research%20Program-blue)](https://www.nasa.gov/hrp/)
 
-**Team:** Chasqui Health · **Demo:** [astronaut-health.onrender.com](https://astronaut-health.onrender.com)
+**Team:** Quipu Space · **Demo:** [astronaut-health.onrender.com](https://astronaut-health.onrender.com)
 
 ---
 
 ## 📖 Executive Summary (For NASA Judges)
 
-**The Problem:** Astronauts on deep space missions (Artemis, Mars) face the 5 Hazards of Human Spaceflight identified by NASA HRP: Space Radiation, Isolation, Distance from Earth, Altered Gravity, and Hostile Environments. With communication delays of up to 20 minutes to Mars, they cannot rely on Earth for emergency medical guidance. They must be autonomous.
+**The Problem:** Astronauts on deep space missions (Artemis, Mars) face the five hazards of human spaceflight identified by NASA's Human Research Program (HRP): space radiation, isolation and confinement, distance from Earth, altered gravity, and hostile/closed environments. With communication delays of many minutes each way on missions to Mars, crews cannot count on real-time medical guidance from Earth, and much of the responsibility for noticing health changes falls on the astronauts themselves.
 
-**Our Solution:** Quipu Space is an autonomous health monitoring tool. It uses a **3D interactive body map** (Three.js) to visualize health status by anatomical zone, a **personal pre-flight baseline** to detect anomalies, and an **AI Flight Surgeon** (rule-based engine) that provides immediate NASA-aligned protocols (e.g., "Take B-Complex, rest 5 minutes, re-measure"). It also integrates **NASA's DONKI API** for real-time space weather alerts and **CSA neutron radiation data**.
+**Our Solution:** Quipu Health is an autonomous health monitoring tool. It uses a **3D interactive body map** to show health status by anatomical zone, compares each reading with reference thresholds and with the astronaut's optional **pre-flight baseline**, and includes a **rule-based flight surgeon** that explains what is wrong, suggests an immediate action (for example, "Rest 5 minutes, re-measure") and tells the crew when to escalate. It also uses **NASA's DONKI API** for live space-weather alerts and shows a simulated radiation dose.
 
-**Why It Matters:** It enables medical autonomy on Mars, reduces health risks, and its insights on bone loss and cardiovascular health can also benefit patients on Earth.
+**Why It Matters:** Longer missions mean longer communication delays and less support from Earth. A tool that helps crews interpret their own data, decide when to escalate and keep a monitoring routine supports the autonomy those missions need. The Canadian Space Agency notes that research on how spaceflight affects the body has informed work on conditions such as osteoporosis, cardiovascular disorders and type 2 diabetes; self-monitoring tools may also be relevant on Earth where access to specialists is limited.
 
 ---
 
 ## ✨ Key Features
-- **3D Interactive Body Map (Three.js):** Click on zones (Head, Chest, Limbs) to view real-time health status and NASA-specific risks (e.g., SANS, Cardiovascular Adaptations).
-- **AI Flight Surgeon:** A rule-based engine that analyzes the last 7 health readings and generates recommendations based on NASA HRP thresholds.
-- **Crew Health Score (0-100):** A composite metric based on sleep, mood, blood pressure, and radiation exposure.
-- **Personal Pre-Flight Baseline:** Replaces generic thresholds with the astronaut's own baseline, reducing false alarms.
-- **Real-Time Space Weather (DONKI API):** Integrates NASA's DONKI API to alert the crew of Solar Particle Events (SEP).
-- **Communication Delay Simulation:** Select ISS, Moon, or Mars to simulate communication delays (1.3s vs 20 min) and adapt protocols.
-- **Symptom Checker & Journaling:** Tracks SANS symptoms (vision changes), immune reactivation (rash), and psychological well-being (ARCHeR study).
+
+- **3D Interactive Body Map (Three.js):** Click a zone (for example Head, Chest, Abdomen, Limbs/Bones) to see its current status, the indicators behind it, the reason it is flagged and a recommended action. The overall status follows the worst indicator.
+- **Rule-Based Flight Surgeon:** Explicit rules analyze the last 7 days of readings and generate recommendations. Thresholds are general adult references, not NASA values. This is **not** an AI model.
+- **Crew Health Score (0–100):** A transparent rule-based score from sleep, mood, systolic and diastolic blood pressure, glucose and active DONKI alerts; every deduction is shown. While any zone is critical, the score is capped at 69.
+- **Personal Pre-Flight Baseline:** Flags deviations from each astronaut's own reference, in addition to the reference thresholds.
+- **Live Space Weather (DONKI API):** Uses NASA's DONKI API to alert the crew of Solar Energetic Particle (SEP) events.
+- **Communication Delay Simulation:** Select ISS, Moon or Mars to simulate the one-way delay (near real-time for the ISS, about 1.3 s for the Moon, minutes for Mars) and adapt the escalation protocol.
+- **Escalation:** In a critical state, the tool prepares a report for the flight surgeon.
+- **Measurement Reminders:** Lists the measurements still pending today and opens the form with that indicator preselected.
+- **Symptom Checker & Quick Reaction Test:** Tracks vision changes (SANS), immune reactivation (rash), dizziness and a simple reaction-time test as a fatigue signal.
+- **Mission Risks & Studies:** Shows the five HRP hazards and tracks items inspired by HRP studies (Immune Biomarkers, SANS/B-Complex, CIPHER, ARCHeR).
+- **Gamification:** Points, achievements and streaks to encourage consistent self-monitoring.
 
 ---
 
 ## 🔬 NASA Data & Scientific Sources
-| Feature | NASA/CSA Source |
-| :--- | :--- |
-| 5 Hazards of Spaceflight | [NASA HRP - Hazards](https://www.nasa.gov/hrp/hazards/) |
-| Cardiovascular Risk | [NASA HRP - Risk i=179](https://humanresearchroadmap.nasa.gov/Risks/risk.aspx?i=179) |
-| SANS (Vision) Risk | [NASA HRP - Risk i=105](https://humanresearchroadmap.nasa.gov/Risks/risk.aspx?i=105) |
-| Bone Loss Risk | [NASA HRP - Risk i=77](https://humanresearchroadmap.nasa.gov/Risks/risk.aspx?i=77) |
-| Immune Reactivation | [NASA HRP - Risk i=85](https://humanresearchroadmap.nasa.gov/Risks/risk.aspx?i=85) |
-| Space Weather Data | [NASA CCMC DONKI API](https://ccmc.gsfc.nasa.gov/DONKI-API/get/SEP) |
-| Neutron Radiation | [Canadian Space Agency (CSA) - CANS](https://www.asc-csa.gc.ca/eng/news/articles/2026/2026-02-26-monitoring-radiation-astronaut-health.asp) |
 
-**References to OSDR / LSDA:** The thresholds and risk models are informed by studies archived in NASA's Open Science Data Repository (OSDR) and Life Sciences Data Archive (LSDA). They serve as scientific validation for our indicators.
+| Feature | NASA / CSA source |
+| :--- | :--- |
+| 5 Hazards of Spaceflight | [NASA HRP — Hazards](https://www.nasa.gov/hrp/hazards/) |
+| Cardiovascular risk | [NASA HRP — Risk i=179](https://humanresearchroadmap.nasa.gov/Risks/risk.aspx?i=179) |
+| SANS (vision) risk | [NASA HRP — Risk i=105](https://humanresearchroadmap.nasa.gov/Risks/risk.aspx?i=105) |
+| Bone loss risk | [NASA HRP — Risk i=77](https://humanresearchroadmap.nasa.gov/Risks/risk.aspx?i=77) |
+| Immune reactivation | [NASA HRP — Risk i=85](https://humanresearchroadmap.nasa.gov/Risks/risk.aspx?i=85) |
+| HRP studies tracked | [NASA HRP — Ongoing HRP Research](https://www.nasa.gov/hrp/ongoing-hrp-research/) |
+| Space weather (**live data**) | [NASA CCMC DONKI API — SEP](https://ccmc.gsfc.nasa.gov/DONKI-API/get/SEP) |
+| Radiation context | [Canadian Space Agency — Monitoring radiation for astronaut health](https://www.asc-csa.gc.ca/eng/news/articles/2026/2026-02-26-monitoring-radiation-astronaut-health.asp) |
+| Effects of spaceflight on the body | [Canadian Space Agency — Why do we conduct science experiments in space?](https://www.asc-csa.gc.ca/eng/iss/science/why-do-we-conduct-science-experiments-in-space.asp) |
+| Reviewed, not used as data | [NASA OSDR — Inspiration4 datasets](https://www.nasa.gov/osdr-latest-news-i4-mission-datasets/) |
+
+### What is real and what is simulated
+
+- **Live NASA data:** space-weather events from the DONKI API.
+- **Simulated:** all physiological readings, missions, astronauts, points and achievements (generated by `db/seeds.rb`), the cumulative radiation dose (the neutron share shown is an estimate based on Canadian Space Agency information) and the communication delay.
+- **Reviewed but not used:** we reviewed NASA's Open Science Data Repository (Inspiration4 'omics datasets) and the description of Spaceflight Standard Measures. They do not contain the daily vitals this tool tracks, and Standard Measures data is access-controlled, so they were not used as data or as a source of thresholds.
+
+---
+
+## ⚠️ Scope and Limitations
+
+- **Not a medical device.** It records, suggests and escalates; it does not diagnose.
+- **Thresholds are indicative** and have not been validated by a clinician or a flight surgeon.
+- **Only what a crew member can measure alone.** Blood counts, bone density, imaging, intracranial pressure and personal radiation dosimetry need laboratory or dedicated equipment and are out of scope. The bone-loss value in the daily check is entered from a medical exam (e.g., DEXA); the app does not measure it.
+- **Simulated physiological data**, radiation dose and communication delay (see above).
 
 ---
 
 ## 🛠️ Technology Stack
+
 - **Backend:** Ruby on Rails 8.1, PostgreSQL
 - **Frontend:** Tailwind CSS 4, Stimulus.js, Three.js 0.160 (CDN), Chart.js 4 (CDN)
-- **API:** NASA DONKI (Space Weather)
-- **AI Logic:** Rule-based engine (Ruby Service)
+- **API:** NASA DONKI (space weather)
+- **Decision logic:** rule-based engine (Ruby services)
 
 ---
 
 ## 🚀 Installation & Setup
+
 ```bash
 cd astronaut_health
 bundle install
 bin/rails db:create db:migrate db:seed
 bin/dev
+```
 
 Open http://localhost:3000.
-📁 Architecture
-text
 
+---
+
+## 📁 Architecture
+
+```text
 app/
 ├── controllers/
 │   ├── dashboard_controller.rb          # main view
@@ -93,144 +121,120 @@ app/
 └── views/
     ├── dashboard/index.html.erb         # 3D scene, panel, charts, modal
     └── health_readings/{new,index}.html.erb
+```
 
-Data Flow
+### Data Flow
 
-    Selector sends GET /?mission_id=...&astronaut_id=....
+1. The selector sends `GET /?mission_id=...&astronaut_id=...`.
+2. The form sends `POST /health_readings` with fetch (JSON).
+3. `HealthReading` calls `HealthEvaluator`, which sets the status.
+4. `GamificationService` awards achievements.
+5. The controller returns JSON with the reading, the recommendation and achievements.
+6. The frontend emits `health:reading-created`; `body_3d_controller` repaints the zone and `health_charts_controller` reloads the charts.
+7. Clicking a zone makes `body_3d_controller` query `/api/health_status` and render the side panel.
 
-    Form sends POST /health_readings with fetch (JSON).
+---
 
-    HealthReading calls HealthEvaluator (sets status).
+## 🔬 Reference Thresholds (HealthEvaluator)
 
-    GamificationService awards achievements.
+Indicative operating ranges, **not NASA values**. Blood pressure upper cut-offs follow the AHA stages (130/80 and 140/90) and the glucose ranges are informed by ADA guidance; heart rate, temperature, sleep and mood ranges, and all lower cut-offs, are team-defined.
 
-    Controller returns JSON with reading, recommendation, achievements.
+| Indicator | Green | Yellow | Red | Rationale |
+| :--- | :--- | :--- | :--- | :--- |
+| Systolic BP (mmHg) | 90–129 | 85–89 / 130–139 | < 85 / ≥ 140 | ≥ 140 = stage 2 hypertension (AHA); < 85 = hypotension (team-defined) |
+| Diastolic BP (mmHg) | 60–79 | 50–59 / 80–89 | < 50 / ≥ 90 | ≥ 90 = stage 2 hypertension (AHA); < 50 = hypotension (team-defined) |
+| Heart rate (bpm) | 50–99 | 40–49 / 100–129 | < 40 / ≥ 130 | Team-defined |
+| Glucose (mg/dL) | 70–179 | 54–69 / 180–249 | < 54 / ≥ 250 | Informed by ADA guidance |
+| Temperature (°C) | 36.0–37.9 | 35.0–35.9 / 38.0–38.9 | < 35.0 / ≥ 39.0 | Team-defined; fever may signal infection in a closed environment |
+| Sleep (h/24h) | 6–10 | 4–5.9 / 10.1–11.9 | < 4 / ≥ 12 | Team-defined; HRP lists sleep loss as a spaceflight risk |
+| Mood (1–10) | ≥ 6 | 4–5 | ≤ 3 | Team-defined self-report scale |
 
-    Frontend emits health:reading-created; body_3d_controller repaints zone; health_charts_controller reloads charts.
+References: [AHA](https://www.heart.org/en/health-topics/high-blood-pressure) (blood pressure), [ADA](https://diabetes.org/about-diabetes/diagnosis) (glucose), [WHO](https://www.who.int/news-room/fact-sheets/detail/hypertension) (hypertension).
 
-    Click on zone: body_3d_controller queries /api/health_status and renders the side panel.
+---
 
-🔬 Clinical Thresholds (HealthEvaluator)
-Indicator   Green Yellow   Red   Rationale
-Systolic BP (mmHg)   90–129   85–89 / 130–139   < 85 / ≥ 140   >140 = cardiovascular risk in microgravity; <85 = hypotension
-Diastolic BP (mmHg)  60–79 50–59 / 80–89  < 50 / ≥ 90 ≥90 = hypertension; <50 = low output
-Heart Rate (bpm)  50–99 40–49 / 100–129   < 40 / ≥ 130   Persistent tachycardia = stress, fever, arrhythmia
-Glucose (mg/dL)   70–179   54–69 / 180–249   < 54 / ≥ 250   <70 = cognitive risk; ≥250 = marked hyperglycemia
-Temperature (°C)  36.0–37.9   35.0–35.9 / 38.0–38.9   < 35.0 / ≥ 39.0   Fever in closed environment = infection
-Sleep (h/24h)  6–10  4–5.9 / 10.1–11.9 < 4 / ≥ 12  NASA documents chronic sleep deficit in orbit
-Mood (1–10) ≥ 6   4–5   ≤ 3   Psychosocial screening for isolation
+## 🎮 Gamification
 
-References: NASA HRP, NASA-STD-3001, ESA Spaceflight Physiology, ACC/AHA, WHO.
-🎮 Gamification
-Achievement Points   Condition
-First Reading  10 First measurement saved
-Daily Check Complete 50 All 7 indicators logged same day
-3-Day Streak   100   3 consecutive days with complete check
-7-Day Streak   250   7 consecutive days
-Green Day   75 All indicators green for the day
-✅ Verification (End-to-End)
+| Achievement | Points | Condition |
+| :--- | :--- | :--- |
+| First Reading | 10 | First measurement saved |
+| Daily Check Complete | 50 | All indicators logged the same day |
+| 3-Day Streak | 100 | 3 consecutive days with a complete check |
+| 7-Day Streak | 250 | 7 consecutive days |
+| Green Day | 75 | All indicators green for the day |
 
-    bin/rails db:create db:migrate db:seed creates 2 missions, 4 astronauts, 160 readings.
+---
 
-    Open /: 3D body, overall red, chest/abdomen red, head/limbs yellow (Ana Ríos, critical profile).
+## ✅ Verification (End-to-End)
 
-    Switch to "Mars Transit Analog 2027" and "Yuki Tanaka": body, panel, points, charts update to healthy state. Switch to "Léa Dubois" for psychosocial risk case.
+1. `bin/rails db:create db:migrate db:seed` creates 2 missions, 4 astronauts and 160 readings.
+2. Open `/`: 3D body, overall red, chest/abdomen red, head/limbs yellow (Ana Ríos, critical profile).
+3. Switch to "Mars Transit Analog 2027" and "Yuki Tanaka": body, panel, points and charts update to a healthy state. Switch to "Léa Dubois" for the psychosocial risk case.
+4. Drag to rotate, zoom, click a zone: the panel shows indicators, values, status and recommendation.
+5. Click "Register new measurement", select heart rate, value 75, save. A toast confirms, the table updates and the chart reloads.
+6. Complete all indicators for the day to unlock achievements.
+7. Query the JSON APIs listed in the architecture section.
 
-    Drag to rotate, zoom, click zone: panel shows indicators, values, status, recommendation.
+---
 
-    Click "Register new measurement", select heart_rate, value 75, save. Toast confirms, table updates, chart reloads.
+## 📋 Hackathon Checklist
 
-    Complete all 7 indicators for the day to unlock achievements.
+**Covered**
 
-    Consume JSON APIs listed above.
+- ☑ Registration of 10 indicator types (systolic/diastolic blood pressure, heart rate, glucose, temperature, sleep, mood, reaction time, meals completed, social contact).
+- ☑ 3D interactive human body with Raycaster and clickable zones.
+- ☑ Side panel with zone, indicators, values, status, reason and recommendation.
+- ☑ Green/yellow/red color coding per zone and indicator.
+- ☑ Treatment/improvement guidance via `RecommendationEngine`.
+- ☑ Dynamic charts with Chart.js (last 7 records per indicator).
+- ☑ Measurement reminders for pending indicators.
+- ☑ Escalation to the flight surgeon with simulated communication delay.
+- ☑ Live NASA DONKI space-weather data.
+- ☑ Basic gamification with points, achievements and streaks.
+- ☑ JSON API for zone status and chart data.
+- ☑ Seeds with 7 days of data and visible red cases.
+- ☑ Multiple missions and astronauts per mission with a selector.
+- ☑ No exotic gems: Rails, pg, Tailwind, Import Maps and Stimulus.
 
-📋 Hackathon Checklist
-Covered
+**Not included**
 
-    ☑
+- ☐ Plausibility checks on entered values (reject impossible values, confirm extreme ones).
+- ☐ Real authentication by role (astronaut, flight surgeon, mission admin).
+- ☐ Real integration with medical devices or wearables.
+- ☐ Push notifications / email to the flight surgeon.
+- ☐ Exportable history to PDF/CSV and clinical audit.
+- ☐ Advanced gamification: weekly missions, ranking, badges.
+- ☐ System tests with Capybara and service coverage.
 
-    Registration of 6 indicator groups (7 types, including systolic/diastolic BP).
-    ☑
+---
 
-    3D interactive human body with Raycaster and clickable zones.
-    ☑
+## 🧠 NASA HRP: Coverage of the 5 Hazards
 
-    Side panel with zone, indicators, value, status, and recommendation.
-    ☑
+- **Radiation:** simulated cumulative dose and live space weather (DONKI) as context; no personal dosimetry.
+- **Isolation / Confinement:** mood, sleep, social contact and psychosocial recommendations (inspired by ARCHeR).
+- **Distance from Earth:** autonomous recommendations, simulated communication delay and escalation to the flight surgeon.
+- **Gravity Fields:** blood pressure and heart rate (cardiovascular adaptations) and the bone-loss entry in the daily check-in (a value entered from a medical exam, not measured by the app).
+- **Hostile / Closed Environments:** temperature, glucose and sleep as early signals.
 
-    Green/yellow/red color coding per zone and indicator.
-    ☑
+---
 
-    Treatment/improvement guide via RecommendationEngine.
-    ☑
+## 📜 Credits & Licenses
 
-    Dynamic charts with Chart.js (last 7 records per indicator).
-    ☑
+- **3D Model:** "Ecorche - Anatomy study" by Beatriz Gomez Santamaria. Source: [Sketchfab](https://sketchfab.com/3d-models/ecorche-anatomy-study-e402d3d541eb4b199c57d5410f5d3c57). License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Modified: zones are color-coded by health status.
+- **Libraries:** Three.js 0.160.0 (MIT), Chart.js 4.4.1 (MIT), Stimulus 3.2.2 (MIT), Turbo 8.0.23 (MIT), Tailwind CSS 4.3.4 (MIT), Ruby on Rails 8.1.4.1 (MIT), Propshaft 1.3.2 (MIT).
+- **Reference thresholds:** AHA (blood pressure), ADA (glucose) and WHO (hypertension) as general references. Design informed by NASA HRP; the numeric thresholds and operating ranges are team-defined. All physiological data is simulated.
+- **AI disclosure:** AI tools (DeepSeek, ChatGPT/Claude) were used to assist in code generation, README drafting and presentation preparation. Reviewed by the team; clinical thresholds have not been validated by a clinician.
 
-    Basic gamification with points, achievements, streaks.
-    ☑
+---
 
-    JSON API for zone status and chart data.
-    ☑
+## ⚠️ Disclaimer
 
-    Seeds with 7 days of data and visible red cases.
-    ☑
+Educational prototype, not a medical device. Physiological data is simulated for demonstration; space weather data is live from the NASA DONKI API.
 
-    Multiple missions and astronauts per mission with selector.
-    ☑
+This project is not affiliated with, endorsed by, or certified by NASA. It was created for the NASA Space Apps Challenge. Clinical thresholds are indicative and must be validated by a flight surgeon before any real use.
 
-    APIs and form filtered by mission_id / astronaut_id.
-    ☑
+---
 
-    No exotic gems; only Rails + pg + Tailwind + Import Maps + Stimulus.
+## 📊 Data
 
-Nice to have (not included)
-
-    □
-
-    Real authentication by role (Astronaut, Flight Surgeon, Mission Admin).
-    □
-
-    Real integration with medical devices or wearables.
-    □
-
-    Push notifications / email to Flight Surgeon.
-    □
-
-    Exportable history to PDF/CSV and clinical audit.
-    □
-
-    Advanced gamification: weekly missions, ranking, badges.
-    □
-
-    System tests with Capybara and service coverage.
-
-🧠 NASA HRP: The 5 Hazards Coverage
-
-    Radiation: Indirect tracking (temperature, mood, fatigue).
-
-    Isolation/Confinement: mood_score, sleep, psychosocial recommendations.
-
-    Distance from Earth: Autonomous recommendations and escalation to Flight Surgeon.
-
-    Gravity Fields: BP, heart rate, sleep to detect deconditioning.
-
-    Hostile/Closed Environments: Temperature, glucose, sleep as early signals.
-
-📜 Credits & Licenses
-
-    3D Model: "Ecorche - Anatomy study" by Beatriz Gomez Santamaria. Source: Sketchfab. License: CC BY 4.0. Modified: zones are color-coded by health status.
-
-    Libraries: Three.js 0.160.0 (MIT), Chart.js 4.4.1 (MIT), Stimulus 3.2.2 (MIT), Turbo 8.0.23 (MIT), Tailwind CSS 4.3.4 (MIT), Ruby on Rails 8.1.4.1 (MIT), Propshaft 1.3.2 (MIT).
-
-    Reference Thresholds: AHA (BP), ADA (glucose), WHO (hypertension), NASA HRP (spaceflight risks).
-
-    AI Disclosure: AI tools (ChatGPT/Claude) were used to assist in code generation, README drafting, and presentation preparation. All medical logic and NASA data citations were manually verified.
-
-⚠️ Disclaimer
-
-Educational prototype, not a medical device. All data is simulated.
-This project is not affiliated with, endorsed by, or certified by NASA. It was created for the NASA Space Apps Challenge. Clinical thresholds are indicative and must be validated by a Flight Surgeon before any real use.
-📊 Data
-
-All missions, astronauts, readings, points, and achievements are simulated data generated by db/seeds.rb. No real personal data is used, no images of people are stored, and no sensitive information is collected.
+All missions, astronauts, readings, points and achievements are simulated data generated by `db/seeds.rb`. No real personal data is used, no images of people are stored, and no sensitive information is collected.

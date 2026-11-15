@@ -7,7 +7,7 @@ class ResearchAssessmentsController < ApplicationController
     @assessment = @astronaut.research_assessments.find_or_initialize_by(assessed_on: Date.current)
 
     if @assessment.update(research_assessment_params)
-      redirect_to dashboard_path, notice: "Estudios NASA guardados (Immune / CIPHER / SANS / ARCHeR)."
+      redirect_to dashboard_path, notice: "NASA studies saved (Immune / CIPHER / SANS / ARCHeR)."
     else
       redirect_to dashboard_path, alert: @assessment.errors.full_messages.to_sentence
     end
@@ -19,7 +19,7 @@ class ResearchAssessmentsController < ApplicationController
     @astronaut = requested_astronaut
     return if @astronaut
 
-    redirect_to root_path, alert: "No hay astronauta configurado. Ejecuta rails db:seed."
+    redirect_to root_path, alert: "No astronaut configured. Run rails db:seed."
   end
 
   def research_assessment_params

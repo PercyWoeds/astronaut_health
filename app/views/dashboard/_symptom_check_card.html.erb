@@ -1,9 +1,10 @@
 <%# Chequeo rápido de síntomas (Immune Biomarkers / SANS / Standard Measures). %>
-<div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl">
+<div class="rounded-2xl border border-slate-700 bg-slate-900/60 p-5 shadow-xl">
   <div class="flex items-start justify-between gap-3">
     <div>
       <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Symptom Checker</p>
-      <h2 class="mt-1 text-lg font-semibold text-white">Síntomas de hoy</h2>
+      <h2 class="mt-1 text-lg font-semibold text-white">Today's Symptoms</h2>
+      <p class="mt-1 text-[11px] text-slate-500">Based on last recorded symptoms</p>
     </div>
     <span class="rounded-full border border-cyan-500/40 bg-cyan-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-cyan-200">
       NASA HRP
@@ -13,9 +14,9 @@
   <%= form_with url: symptom_checks_path(mission_id: @astronaut.mission_id, astronaut_id: @astronaut.id),
                 scope: :symptom_check, method: :post, class: "mt-4 space-y-2" do |form| %>
     <% [
-      { field: :rash_or_hives, icon: "🩹", label: "Erupción", detail: "Reactivación viral · Immune" },
-      { field: :vision_changes, icon: "👁️", label: "Visión", detail: "Cambios visuales · SANS" },
-      { field: :dizziness_nausea, icon: "🤢", label: "Mareo", detail: "Movimiento · Standard Measures" }
+      { field: :rash_or_hives, icon: "🩹", label: "Rash", detail: "Viral reactivation · Immune" },
+      { field: :vision_changes, icon: "👁️", label: "Vision", detail: "Visual changes · SANS" },
+      { field: :dizziness_nausea, icon: "🤢", label: "Dizziness", detail: "Motion · Standard Measures" }
     ].each do |symptom| %>
       <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3 hover:border-cyan-500/40">
         <%= form.check_box symptom[:field], checked: @symptom_check.public_send(symptom[:field]),
@@ -30,11 +31,14 @@
 
     <button type="submit"
             class="mt-1 w-full rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-500/20">
-      Guardar síntomas
+      Save symptoms
     </button>
   <% end %>
 
   <% if @symptom_check.persisted? %>
-    <p class="mt-2 text-[10px] text-slate-500">Último registro: <%= relative_time_es(@symptom_check.checked_on&.to_time) %></p>
+    <p class="mt-2 text-[10px] text-slate-500">Last record: <%= relative_time_es(@symptom_check.checked_on&.to_time) %></p>
+    <% if !@symptom_check.rash_or_hives? && !@symptom_check.vision_changes? && !@symptom_check.dizziness_nausea? %>
+      <p class="mt-1 text-[11px] font-medium text-emerald-300">Nothing to report.</p>
+    <% end %>
   <% end %>
 </div>

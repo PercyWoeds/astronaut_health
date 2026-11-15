@@ -1,7 +1,7 @@
 <%# Tarjeta de muestras biológicas (Immune Biomarkers / Standard Measures). %>
 <div data-controller="modal" class="contents">
   <button type="button" data-action="click->modal#open" class="<%= quick_action_button_classes %>">
-    🧪 Muestras Biológicas
+    🧪 Biological Samples
   </button>
 
   <div data-modal-target="modal" data-action="click->modal#closeOnBackdrop"
@@ -10,8 +10,8 @@
       <div class="flex items-start justify-between gap-4">
         <div>
           <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-300">Immune Biomarkers</p>
-          <h2 class="mt-1 text-xl font-semibold text-white">Registrar muestra biológica</h2>
-          <p class="mt-1 text-sm text-slate-400">Saliva seca, sangre u orina para los estudios de inmunidad.</p>
+          <h2 class="mt-1 text-xl font-semibold text-white">Register biological sample</h2>
+          <p class="mt-1 text-sm text-slate-400">Dry saliva, blood or urine for the immunity studies.</p>
         </div>
         <button type="button" data-action="click->modal#close"
                 class="rounded-lg border border-slate-700 px-2.5 py-1 text-sm text-slate-400 hover:bg-slate-800">✕</button>
@@ -20,7 +20,7 @@
       <%= form_with url: biomarker_samples_path(mission_id: @astronaut.mission_id, astronaut_id: @astronaut.id),
                     scope: :biomarker_sample, method: :post, class: "mt-5 space-y-4" do |form| %>
         <div>
-          <%= form.label :sample_type, "Tipo de muestra", class: "mb-1 block text-sm font-medium text-slate-300" %>
+          <%= form.label :sample_type, "Sample type", class: "mb-1 block text-sm font-medium text-slate-300" %>
           <%= form.select :sample_type,
                 BiomarkerSample::SAMPLE_TYPES.map { |key, label| [ label, key ] },
                 {},
@@ -28,30 +28,30 @@
         </div>
 
         <div>
-          <%= form.label :collected_at, "Fecha y hora de recolección", class: "mb-1 block text-sm font-medium text-slate-300" %>
+          <%= form.label :collected_at, "Collection date and time", class: "mb-1 block text-sm font-medium text-slate-300" %>
           <%= form.datetime_local_field :collected_at, value: Time.current.strftime("%Y-%m-%dT%H:%M"),
                 class: "w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-teal-500" %>
         </div>
 
         <div>
-          <%= form.label :notes, "Notas (opcional)", class: "mb-1 block text-sm font-medium text-slate-300" %>
-          <%= form.text_area :notes, rows: 3, maxlength: 2_000, placeholder: "Condiciones de la muestra, incidencias…",
+          <%= form.label :notes, "Notes (optional)", class: "mb-1 block text-sm font-medium text-slate-300" %>
+          <%= form.text_area :notes, rows: 3, maxlength: 2_000, placeholder: "Sample conditions, incidents…",
                 class: "w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-teal-500" %>
         </div>
 
         <div class="flex items-center justify-end gap-3 pt-2">
           <button type="button" data-action="click->modal#close"
-                  class="rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Cancelar</button>
+                  class="rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Cancel</button>
           <button type="submit"
                   class="rounded-xl bg-teal-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-teal-400">
-            Guardar muestra
+            Save sample
           </button>
         </div>
       <% end %>
 
       <% if @biomarker_samples.any? %>
         <div class="mt-5 border-t border-slate-800 pt-4">
-          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Muestras recientes</p>
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Recent samples</p>
           <ul class="mt-2 space-y-2">
             <% @biomarker_samples.each do |sample| %>
               <li class="flex items-start justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3">

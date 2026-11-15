@@ -1,9 +1,10 @@
-# Datos de demostración para la hackathon.
-# Ejecutar con: bin/rails db:seed
-# El script es destructivo con los datos demo: limpia misiones, astronautas,
-# lecturas y logros antes de recrearlos. No toca BodyZone (catálogo global).
+# Demo data for the hackathon.
+# Run with: bin/rails db:seed
+# The script is destructive for demo data: it clears missions, astronauts,
+# readings and achievements before recreating them. It does not touch BodyZone
+# (global catalog).
 
-puts "Limpiando datos demo…"
+puts "Clearing demo data…"
 GroundReport.delete_all
 Alert.delete_all
 Baseline.delete_all
@@ -20,29 +21,29 @@ Astronaut.delete_all
 Mission.delete_all
 Achievement.delete_all
 
-puts "Creando indicadores del catálogo…"
+puts "Creating indicator catalog…"
 Indicator.seed_catalog!
 
-puts "Creando zonas corporales…"
+puts "Creating body zones…"
 zones = [
   {
     name: "head",
-    description: "Cabeza y estado neuropsicológico: termorregulación, estado de ánimo y fatiga cognitiva.",
+    description: "Head and neuropsychological state: thermoregulation, mood and cognitive fatigue.",
     related_indicators: %w[body_temperature mood_score sleep_hours reaction_time]
   },
   {
     name: "chest",
-    description: "Tórax: sistema cardiovascular. Presión arterial y frecuencia cardíaca en reposo.",
+    description: "Chest: cardiovascular system. Blood pressure and resting heart rate.",
     related_indicators: %w[blood_pressure_systolic blood_pressure_diastolic heart_rate]
   },
   {
     name: "abdomen",
-    description: "Abdomen: metabolismo y control glucémico durante la misión.",
+    description: "Abdomen: metabolism and glycemic control during the mission.",
     related_indicators: %w[blood_glucose meals_completed_percent]
   },
   {
     name: "limbs",
-    description: "Extremidades: rendimiento físico, recuperación muscular y horas de sueño.",
+    description: "Limbs: physical performance, muscle recovery and sleep hours.",
     related_indicators: %w[sleep_hours]
   }
 ]
@@ -51,26 +52,26 @@ zones.each do |attrs|
   BodyZone.find_or_initialize_by(name: attrs[:name]).update!(attrs)
 end
 
-puts "Creando misiones…"
+puts "Creating missions…"
 missions = {}
 [
   {
     name: "Artemis · Gateway Sim 2026",
     code: "ARTEMIS-GW",
-    description: "Simulación de estancia en la estación Gateway en órbita lunar.",
+    description: "Simulated stay aboard the Gateway station in lunar orbit.",
     status: "active"
   },
   {
     name: "Mars Transit Analog 2027",
     code: "MARS-TRANSIT",
-    description: "Análogo de tránsito prolongado a Marte con tripulación reducida.",
+    description: "Long-duration Mars transit analog with a reduced crew.",
     status: "active"
   }
 ].each do |attrs|
   missions[attrs[:code]] = Mission.create!(attrs)
 end
 
-puts "Creando catálogo de logros…"
+puts "Creating achievement catalog…"
 GamificationService::CATALOG.each do |config|
   Achievement.find_or_create_by!(name: config[:name]) do |achievement|
     achievement.description = config[:description]
@@ -83,13 +84,13 @@ end
 # El índice 6 corresponde a HOY. nil = sin medición ese día.
 profiles = {
   critical: {
-    "blood_pressure_systolic" => [ 122, 128, 132, 136, 145, 128, 142 ],
-    "blood_pressure_diastolic" => [ nil, nil, nil, 86, 92, 82, 94 ],
-    "heart_rate" => [ 92, 98, 94, 88, 110, 84, 76 ],
-    "blood_glucose" => [ nil, nil, nil, 160, 255, 120, 265 ],
-    "body_temperature" => [ nil, nil, nil, 37.0, 38.2, 37.1, 37.2 ],
-    "sleep_hours" => [ 5.8, 5.5, 6.2, 6.5, 3.5, 6.0, 5.5 ],
-    "mood_score" => [ 5, 6, 6, 7, 4, 6, 7 ]
+    "blood_pressure_systolic" => [ 118, 122, 126, 130, 138, 128, 145 ],
+    "blood_pressure_diastolic" => [ nil, nil, nil, 78, 84, 80, 92 ],
+    "heart_rate" => [ 68, 72, 70, 74, 76, 72, 76 ],
+    "blood_glucose" => [ nil, nil, nil, 98, 110, 96, 105 ],
+    "body_temperature" => [ nil, nil, nil, 36.7, 36.9, 36.6, 36.8 ],
+    "sleep_hours" => [ 7.0, 6.8, 7.2, 7.1, 6.9, 7.3, 7.0 ],
+    "mood_score" => [ 8, 7, 8, 8, 7, 8, 8 ]
   },
   watch: {
     "blood_pressure_systolic" => [ 118, 124, 130, 128, 134, 126, 132 ],
@@ -101,7 +102,7 @@ profiles = {
     "mood_score" => [ 7, 6, 7, 6, 5, 7, 6 ]
   },
   healthy: {
-    "blood_pressure_systolic" => [ 118, 120, 116, 119, 121, 118, 117 ],
+    "blood_pressure_systolic" => [ 118, 117, 116, 118, 119, 116, 117 ],
     "blood_pressure_diastolic" => [ nil, nil, nil, 76, 78, 74, 75 ],
     "heart_rate" => [ 68, 72, 70, 66, 74, 69, 71 ],
     "blood_glucose" => [ nil, nil, nil, 98, 105, 92, 100 ],
@@ -110,21 +111,21 @@ profiles = {
     "mood_score" => [ 8, 8, 9, 8, 8, 9, 8 ]
   },
   psych: {
-    "blood_pressure_systolic" => [ 120, 122, 118, 124, 126, 121, 123 ],
-    "blood_pressure_diastolic" => [ nil, nil, nil, 78, 80, 76, 79 ],
+    "blood_pressure_systolic" => [ 118, 120, 118, 122, 124, 119, 121 ],
+    "blood_pressure_diastolic" => [ nil, nil, nil, 76, 78, 74, 77 ],
     "heart_rate" => [ 70, 74, 72, 76, 82, 71, 78 ],
     "blood_glucose" => [ nil, nil, nil, 102, 110, 96, 105 ],
     "body_temperature" => [ nil, nil, nil, 36.7, 36.9, 36.6, 36.8 ],
-    "sleep_hours" => [ 6.2, 5.8, 5.5, 4.8, 3.2, 5.0, 3.5 ],
-    "mood_score" => [ 6, 5, 5, 4, 2, 3, 3 ]
+    "sleep_hours" => [ 6.5, 6.0, 5.8, 6.2, 5.5, 6.0, 5.5 ],
+    "mood_score" => [ 7, 6, 6, 5, 5, 6, 5 ]
   }
 }
 
 # Chequeo diario (riesgos NASA HRP / CSA) por perfil.
 daily_profiles = {
   critical: {
-    bone_density_loss_percent: 1.8, co2_level: 2_200, stress_level: 8, calories_intake: 1_500,
-    vision_blurred: true, dizziness_reported: true, skin_rash: true
+    bone_density_loss_percent: 1.1, co2_level: 1_200, stress_level: 6, calories_intake: 2_000,
+    vision_blurred: false, dizziness_reported: false, skin_rash: false
   },
   watch: {
     bone_density_loss_percent: 1.1, co2_level: 1_200, stress_level: 6, calories_intake: 2_000,
@@ -135,26 +136,26 @@ daily_profiles = {
     vision_blurred: false, dizziness_reported: false, skin_rash: false
   },
   psych: {
-    bone_density_loss_percent: 0.3, co2_level: 700, stress_level: 9, calories_intake: 1_700,
+    bone_density_loss_percent: 0.5, co2_level: 800, stress_level: 6, calories_intake: 2_200,
     vision_blurred: false, dizziness_reported: false, skin_rash: false
   }
 }
 
 journal_prompts = {
-  critical: "Día difícil: visión borrosa y mareos tras el ejercicio. He avisado al equipo y estoy pendiente de la prueba visual.",
-  watch: "Sesión de ejercicio completada. Un poco de mareo al levantarme rápido, pero se ha pasado con hidratación.",
-  healthy: "Buen ánimo y rutina estable. He llamado a casa y he dormido mejor.",
-  psych: "Me cuesta desconectar del trabajo. El confinamiento pesa hoy; escribir aquí ayuda un poco."
+  critical: "Chest felt a little tight after exercise. I reported it to the team and I am resting while they review the reading.",
+  watch: "Exercise session completed. A bit of dizziness when standing up quickly, but it passed with hydration.",
+  healthy: "Good mood and a stable routine. I called home and slept better.",
+  psych: "A quiet day in confinement. I called home and wrote down a short plan for tomorrow to stay focused."
 }
 
 # Estudios NASA: Immune Biomarkers, CIPHER, SANS/B-Complex y ARCHeR.
 research_profiles = {
   critical: {
-    saliva_sample_taken: true, virus_reactivation_suspected: true,
-    calcium_isotopes_level: 7.8, telomere_length: 3.2, spatial_cognition_score: 35,
-    vestibular_test_passed: false, vision_test_performed: false, oct_scan_result: "abnormal",
-    b_complex_supplement_taken: false, actigraphy_device_synced: false,
-    cognitive_performance_survey_score: 28
+    saliva_sample_taken: true, virus_reactivation_suspected: false,
+    calcium_isotopes_level: 8.6, telomere_length: 4.6, spatial_cognition_score: 62,
+    vestibular_test_passed: true, vision_test_performed: true, oct_scan_result: "normal",
+    b_complex_supplement_taken: true, actigraphy_device_synced: true,
+    cognitive_performance_survey_score: 70
   },
   watch: {
     saliva_sample_taken: true, virus_reactivation_suspected: false,
@@ -171,53 +172,53 @@ research_profiles = {
     cognitive_performance_survey_score: 88
   },
   psych: {
-    saliva_sample_taken: false, virus_reactivation_suspected: false,
-    calcium_isotopes_level: 8.9, telomere_length: 5.1, spatial_cognition_score: 55,
+    saliva_sample_taken: true, virus_reactivation_suspected: false,
+    calcium_isotopes_level: 8.9, telomere_length: 5.1, spatial_cognition_score: 62,
     vestibular_test_passed: true, vision_test_performed: true, oct_scan_result: "normal",
-    b_complex_supplement_taken: true, actigraphy_device_synced: false,
-    cognitive_performance_survey_score: 35
+    b_complex_supplement_taken: true, actigraphy_device_synced: true,
+    cognitive_performance_survey_score: 70
   }
 }
 
 biomarker_profiles = {
-  critical: { sample_type: "saliva_dry", notes: "Muestra prioritaria por sospecha de reactivación viral." },
-  watch: { sample_type: "blood", notes: "Análisis de biomarcadores inmunes de rutina." },
-  healthy: { sample_type: "saliva_dry", notes: "Muestra de saliva seca para Standard Measures." },
-  psych: { sample_type: "urine", notes: "Muestra para panel metabólico y de estrés." }
+  critical: { sample_type: "blood", notes: "Routine immune biomarker panel." },
+  watch: { sample_type: "blood", notes: "Routine immune biomarker panel." },
+  healthy: { sample_type: "saliva_dry", notes: "Dry saliva sample for Standard Measures." },
+  psych: { sample_type: "urine", notes: "Sample for metabolic and stress panel." }
 }
 
 # Chequeo de síntomas y métricas de nutrición/contacto social.
 symptom_profiles = {
-  critical: { rash_or_hives: true, vision_changes: true, dizziness_nausea: true },
+  critical: { rash_or_hives: false, vision_changes: false, dizziness_nausea: false },
   watch: { rash_or_hives: false, vision_changes: false, dizziness_nausea: true },
   healthy: { rash_or_hives: false, vision_changes: false, dizziness_nausea: false },
   psych: { rash_or_hives: false, vision_changes: false, dizziness_nausea: false }
 }
 
 wellness_profiles = {
-  critical: { meals_completed_percent: 35, social_contact_minutes: 5 },
+  critical: { meals_completed_percent: 85, social_contact_minutes: 30 },
   watch: { meals_completed_percent: 70, social_contact_minutes: 20 },
   healthy: { meals_completed_percent: 95, social_contact_minutes: 45 },
-  psych: { meals_completed_percent: 55, social_contact_minutes: 4 }
+  psych: { meals_completed_percent: 75, social_contact_minutes: 20 }
 }
 
-reaction_profiles = { critical: 620, watch: 480, healthy: 350, psych: 540 }
+reaction_profiles = { critical: 400, watch: 480, healthy: 350, psych: 480 }
 
 astronaut_specs = [
-  { name: "Ana Ríos", mission: "ARTEMIS-GW", profile: :critical, destination: "iss" },
+  { name: "Ana Ríos", mission: "ARTEMIS-GW", profile: :critical, destination: "moon" },
   { name: "Carlos Méndez", mission: "ARTEMIS-GW", profile: :watch, destination: "moon" },
   { name: "Yuki Tanaka", mission: "MARS-TRANSIT", profile: :healthy, destination: "mars" },
   { name: "Léa Dubois", mission: "MARS-TRANSIT", profile: :psych, destination: "mars" }
 ]
 
-puts "Creando astronautas y lecturas…"
+puts "Creating astronauts and readings…"
 astronaut_specs.each do |spec|
   astronaut = Astronaut.create!(name: spec[:name], mission: missions.fetch(spec[:mission]), destination: spec[:destination])
   profile = profiles.fetch(spec[:profile])
   created = 0
 
-  # Línea base pre-vuelo de ejemplo: el corazón en reposo en Tierra.
-  # La lectura actual de Ana (76 bpm) queda > 20 % por encima y se marca amarilla.
+  # Pre-flight baseline: resting heart rate on Earth.
+  # Ana's current reading (76 bpm) is > 20 % above baseline and is marked yellow.
   if spec[:profile] == :critical
     astronaut.health_readings.create!(
       indicator_type: "heart_rate", value: 60, is_baseline: true,
@@ -233,6 +234,7 @@ astronaut_specs.each do |spec|
 
       days_ago = 6 - day_index
       measured_at = Time.zone.now.beginning_of_day - days_ago.days + 8.hours + indicator_offset.minutes
+      measured_at = [ measured_at, Time.current - 1.minute ].min
 
       astronaut.health_readings.create!(
         indicator_type: indicator_type,
@@ -282,16 +284,17 @@ astronaut_specs.each do |spec|
   astronaut.pre_eva_checks.create!(
     o2_ok: true,
     pressure_ok: true,
-    fatigue_ok: spec[:profile] != :critical,
-    egress_fitness_completed: %i[watch healthy].include?(spec[:profile]),
+    fatigue_ok: true,
+    egress_fitness_completed: true,
     checked_at: Time.current
   )
 
   awarded = GamificationService.new(astronaut).call
-  puts "  → #{astronaut.name} (#{astronaut.mission.code}): #{created} lecturas, #{astronaut.total_points} pts"
-  puts "     Logros: #{awarded.map(&:name).join(', ')}" if awarded.any?
+  pending = MeasurementReminders.call(astronaut)
+  puts "  → #{astronaut.name} (#{astronaut.mission.code}): #{created} readings, #{astronaut.total_points} pts, #{pending.size} pending"
+  puts "     Achievements: #{awarded.map(&:name).join(', ')}" if awarded.any?
 end
 
 puts
-puts "Listo. Misiones: #{Mission.count} · Astronautas: #{Astronaut.count} · Lecturas: #{HealthReading.count} · Chequeos: #{DailyCheck.count} · Síntomas: #{SymptomCheck.count} · Estudios: #{ResearchAssessment.count} · Muestras: #{BiomarkerSample.count}"
-puts "Abre http://localhost:3000 y usa el selector de misión/astronauta."
+puts "Done. Missions: #{Mission.count} · Astronauts: #{Astronaut.count} · Readings: #{HealthReading.count} · Checks: #{DailyCheck.count} · Symptoms: #{SymptomCheck.count} · Studies: #{ResearchAssessment.count} · Samples: #{BiomarkerSample.count}"
+puts "Open http://localhost:3000 and use the mission/astronaut selector."

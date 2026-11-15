@@ -3,21 +3,27 @@
 # Los umbrales son orientativos para monitorización de astronautas y están basados en:
 #   - NASA Human Research Program (HRP): riesgos cardiovasculares, exposición a microgravedad
 #     y contramedidas durante vuelos de larga duración.
-#   - NASA-STD-3001 (NASA Space Flight Human-System Standard), Vol. 1: límites de salud.
-#   - CSA (Canadian Space Agency): radiación de neutrones (CANS), pérdida ósea acelerada
-#     y contramedidas de ejercicio contra resistencia.
+#   - NASA-STD-3001 (NASA Space Flight Human-System Standard), Vol. 2: límites de salud
+#     (usado como fuente del objetivo de CO₂ del entorno cerrado).
+#   - CSA (Canadian Space Agency): radiación de neutrones (CANS) y pérdida ósea acelerada.
+#   - American Heart Association (AHA): clasificación de presión arterial.
 #   - ESA Spaceflight Physiology / guías clínicas terrestres (ACC/AHA, OMS) cuando no existe
 #     un estándar específico de vuelo espacial.
 # En un contexto real, un Flight Surgeon debe validar y ajustar estos rangos por misión.
 class HealthEvaluator
   # PRESIÓN ARTERIAL SISTÓLICA (mmHg)
-  # > 140: riesgo cardiovascular y de remodelado arterial acelerado en microgravedad.
-  # < 85: hipotensión/ortostatismo, especialmente relevante al retornar a 1g.
-  SYSTOLIC = { red_low: 85, yellow_low: 90, yellow_high: 130, red_high: 140 }.freeze
+  # Clasificación AHA 2017 (https://www.heart.org/en/health-topics/high-blood-pressure):
+  #   Normal < 120 · Elevated 120-129 · Stage 1 130-139 · Stage 2 >= 140 · Crisis >= 180.
+  # Traducido a un único semáforo: verde < 120, amarillo 120-139, rojo >= 140.
+  # El umbral bajo (< 90 / < 85) para hipotensión/ortostatismo queda marcado como
+  # "unverified": no existe una fuente NASA citable para este límite en microgravedad.
+  SYSTOLIC = { red_low: 85, yellow_low: 90, yellow_high: 119, red_high: 140, crisis_high: 180 }.freeze
 
   # PRESIÓN ARTERIAL DIASTÓLICA (mmHg)
-  # >= 90 se asocia a hipertensión; < 50 puede indicar bajo gasto o deshidratación.
-  DIASTOLIC = { red_low: 50, yellow_low: 60, yellow_high: 80, red_high: 90 }.freeze
+  # Clasificación AHA 2017: Normal < 80 · Stage 1 80-89 · Stage 2 >= 90 · Crisis >= 120.
+  # Semáforo: verde < 80, amarillo 80-89, rojo >= 90. Umbral bajo (< 60 / < 50)
+  # marcado como "unverified" (sin fuente NASA específica).
+  DIASTOLIC = { red_low: 50, yellow_low: 60, yellow_high: 79, red_high: 90, crisis_high: 120 }.freeze
 
   # FRECUENCIA CARDÍACA EN REPOSO (bpm)
   # La microgravedad reduce la carga cardíaca; taquicardia persistente > 100 puede reflejar
@@ -69,41 +75,42 @@ class HealthEvaluator
   }.freeze
 
   BASELINE_DEVIATION_PERCENT = 20
-  BASELINE_PROTOCOL = "Desviación de la línea base pre-vuelo. Posible adaptación a microgravedad."
-  COGNITIVE_FATIGUE_PROTOCOL = "Fatiga cognitiva detectada. Se recomienda descanso (CIPHER / Spatial Cognition)."
-  NUTRITION_INADEQUATE_PROTOCOL = "Riesgo de Nutrición Inadecuada. Revisar el plan de comidas y la ingesta calórica."
-  ISOLATION_PROTOCOL = "Riesgo de Aislamiento (ARCHeR). Programar contacto con la tripulación y con Tierra."
+  BASELINE_PROTOCOL = "Deviation from the pre-flight baseline; may reflect adaptation to microgravity."
+  CONFIRMED_EXTREME_NOTE = "Confirmed extreme value. Critical alert activated."
+  COGNITIVE_FATIGUE_PROTOCOL = "Cognitive fatigue detected. Rest recommended (CIPHER / Spatial Cognition)."
+  NUTRITION_INADEQUATE_PROTOCOL = "Inadequate Nutrition risk. Review the meal plan and caloric intake."
+  ISOLATION_PROTOCOL = "Isolation risk (ARCHeR). Schedule contact with the crew and with Earth."
 
   # ---------------------------------------------------------------------------
-  # Chequeo diario NASA HRP / CSA
+  # Daily check NASA HRP / CSA
   # ---------------------------------------------------------------------------
-  SANS_PROTOCOL = "Síntomas de SANS detectados. Realizar prueba de agudeza visual inmediata. Contactar a Flight Surgeon."
-  SENSORIMOTOR_PROTOCOL = "Mareo reportado: posible desajuste sensorimotor. Detener la actividad, comprobar ortostatismo y contactar al Flight Surgeon si persiste."
-  PSYCH_PROTOCOL = "Estrés elevado por aislamiento/confinamiento. Activar protocolo psicosocial, programar contacto con Tierra y registrar evolución."
-  BONE_PROTOCOL = "Pérdida de densidad ósea por microgravedad. Reforzar ejercicio contra resistencia. Riesgo de osteoporosis acelerada. Los datos de la ISS (CSA) ayudan a prevenir esto en Tierra."
-  SKIN_PROTOCOL = "Lesión cutánea reportada: posible interacción huésped-microorganismo. Higiene, vigilar signos de infección y consultar al Flight Surgeon."
-  NUTRITION_PROTOCOL = "Ingesta calórica fuera de objetivo. Ajustar el plan nutricional, revisar hidratación y registrar tendencia."
-  CO2_PROTOCOL = "CO₂ elevado en entorno cerrado: aumentar ventilación/filtración y alejarse de la fuente. Verificar sensores del módulo."
+  SANS_PROTOCOL = "SANS symptoms detected. Perform an immediate visual acuity test. Contact the Flight Surgeon."
+  SENSORIMOTOR_PROTOCOL = "Dizziness reported: possible sensorimotor mismatch. Stop activity, check orthostatism and contact the Flight Surgeon if it persists."
+  PSYCH_PROTOCOL = "High stress from isolation/confinement. Activate the psychosocial protocol, schedule contact with Earth and log the trend."
+  BONE_PROTOCOL = "Bone density loss due to microgravity. Reinforce resistance exercise. Accelerated osteoporosis risk. ISS data (CSA) help prevent this on Earth."
+  SKIN_PROTOCOL = "Skin lesion reported: possible host-microorganism interaction. Hygiene, watch for signs of infection and consult the Flight Surgeon."
+  NUTRITION_PROTOCOL = "Caloric intake outside target. Adjust the nutritional plan, review hydration and log the trend."
+  CO2_PROTOCOL = "Elevated CO₂ in a closed environment: increase ventilation/filtration and move away from the source. Check module sensors."
 
   # ---------------------------------------------------------------------------
-  # Estudios de investigación NASA: Immune Biomarkers, CIPHER, SANS/B-Complex, ARCHeR
+  # NASA research studies: Immune Biomarkers, CIPHER, SANS/B-Complex, ARCHeR
   # ---------------------------------------------------------------------------
-  IMMUNE_PROTOCOL = "Aislar, recolectar muestra de saliva seca, notificar a Houston."
-  SALIVA_SAMPLE_PROTOCOL = "Muestra de saliva seca pendiente (Immune Biomarkers / Artemis). Recolectar y registrar."
-  SANS_STUDY_PROTOCOL = "Estudio SANS: realizar OCT y examen visual. Tomar suplemento B-Complex diario (estudio B-Complex)."
-  CIPHER_BONE_PROTOCOL = "Estudio CIPHER: riesgo de pérdida ósea y fractura en la salida de la cápsula. Vigilar calcio/telómeros y reforzar contramedidas."
-  CIPHER_EGRESS_PROTOCOL = "Estudio CIPHER: prueba de Egress (salida de cápsula) pendiente. Completar Egress Fitness antes de autorizar la actividad."
-  ARCHER_FATIGUE_PROTOCOL = "Estudio ARCHeR: fatiga y alteración del sueño. Sincronizar actigrafía y repetir la encuesta de rendimiento cognitivo."
+  IMMUNE_PROTOCOL = "Isolate, collect a dry saliva sample, notify Houston."
+  SALIVA_SAMPLE_PROTOCOL = "Dry saliva sample pending (Immune Biomarkers / Artemis). Collect and register."
+  SANS_STUDY_PROTOCOL = "SANS study: perform OCT and visual exam. Take the daily B-Complex supplement (B-Complex study)."
+  CIPHER_BONE_PROTOCOL = "CIPHER study: bone loss and fracture risk during capsule egress. Monitor calcium/telomeres and reinforce countermeasures."
+  CIPHER_EGRESS_PROTOCOL = "CIPHER study: Egress test (capsule egress) pending. Complete Egress Fitness before authorizing the activity."
+  ARCHER_FATIGUE_PROTOCOL = "ARCHeR study: fatigue and sleep disruption. Sync actigraphy and repeat the cognitive performance survey."
 
-  # Metadatos de presentación de los campos del chequeo diario.
+  # Daily check field presentation metadata.
   DAILY_FIELD_META = {
-    "bone_density_loss_percent" => { label: "Pérdida de densidad ósea", unit: "%", zone: "limbs", protocol: BONE_PROTOCOL },
-    "co2_level" => { label: "CO₂ en entorno cerrado", unit: "ppm", zone: nil, protocol: CO2_PROTOCOL },
-    "stress_level" => { label: "Nivel de estrés", unit: "/10", zone: "psychological", protocol: PSYCH_PROTOCOL },
-    "calories_intake" => { label: "Ingesta calórica", unit: "kcal", zone: "abdomen", protocol: NUTRITION_PROTOCOL },
-    "vision_blurred" => { label: "Visión borrosa (SANS)", unit: "", zone: "head", protocol: SANS_PROTOCOL },
-    "dizziness_reported" => { label: "Mareo reportado", unit: "", zone: "chest", protocol: SENSORIMOTOR_PROTOCOL },
-    "skin_rash" => { label: "Lesión cutánea", unit: "", zone: "abdomen", protocol: SKIN_PROTOCOL }
+    "bone_density_loss_percent" => { label: "Bone density loss", unit: "%", zone: "limbs", protocol: BONE_PROTOCOL },
+    "co2_level" => { label: "CO₂ in closed environment", unit: "ppm", zone: nil, protocol: CO2_PROTOCOL },
+    "stress_level" => { label: "Stress level", unit: "/10", zone: "psychological", protocol: PSYCH_PROTOCOL },
+    "calories_intake" => { label: "Caloric intake", unit: "kcal", zone: "abdomen", protocol: NUTRITION_PROTOCOL },
+    "vision_blurred" => { label: "Blurred vision (SANS)", unit: "", zone: "head", protocol: SANS_PROTOCOL },
+    "dizziness_reported" => { label: "Dizziness reported", unit: "", zone: "chest", protocol: SENSORIMOTOR_PROTOCOL },
+    "skin_rash" => { label: "Skin lesion", unit: "", zone: "abdomen", protocol: SKIN_PROTOCOL }
   }.freeze
 
   STATUS_RANK = { "red" => 0, "yellow" => 1, "green" => 2, "unknown" => 3 }.freeze
@@ -147,8 +154,11 @@ class HealthEvaluator
     when "stress_level"
       numeric_status(value) { |v| v > 7 ? "red" : v > 5 ? "yellow" : "green" }
     when "co2_level"
+      # Source: NASA-STD-3001 Vol. 2 — target < 1,000 ppm; critical > 2,000 ppm.
       numeric_status(value) { |v| v > 2_000 ? "red" : v > 1_000 ? "yellow" : "green" }
     when "calories_intake"
+      # Source: NASA HRP - Space Physiology — minimum daily intake ~2,000 kcal.
+      # Upper bounds are "unverified" (mission-specific, no citable NASA threshold).
       numeric_status(value) do |v|
         if v < 1_200 || v > 4_500 then "red"
         elsif v < 1_800 || v > 3_500 then "yellow"
@@ -163,6 +173,20 @@ class HealthEvaluator
   # El peor estado entre varios semáforos (criterio conservador de vuelo).
   def self.worst_status(*statuses)
     statuses.compact.min_by { |status| STATUS_RANK.fetch(status.to_s, 9) } || "green"
+  end
+
+  # Categoría AHA combinada de presión arterial (usa la peor de sistólica/diastólica).
+  # Sustituye al nombre genérico "Crítico" por el nivel clínico correcto.
+  def self.blood_pressure_category(systolic, diastolic)
+    sys = systolic.to_f
+    dia = diastolic.to_f
+
+    return "Hypertensive Crisis" if sys >= 180 || dia >= 120
+    return "Stage 2 Hypertension" if sys >= 140 || dia >= 90
+    return "Stage 1 Hypertension" if (130..139).cover?(sys) || (80..89).cover?(dia)
+    return "Elevated" if (120..129).cover?(sys)
+
+    "Normal"
   end
 
   # Chequeo rápido de síntomas (Immune / SANS / Standard Measures).
@@ -180,24 +204,24 @@ class HealthEvaluator
     if check.rash_or_hives
       zone_statuses["immune"] = "red"
       zone_indicators["immune"] << research_indicator(
-        check, type: "rash_or_hives", label: "Erupción / urticaria (Immune)",
-        value: "Sí", unit: "", status: "red", protocol: IMMUNE_PROTOCOL
+        check, type: "rash_or_hives", label: "Rash / hives (Immune)",
+        value: "Yes", unit: "", status: "red", protocol: IMMUNE_PROTOCOL
       )
     end
 
     if check.vision_changes
       zone_statuses["head"] = "red"
       zone_indicators["head"] << research_indicator(
-        check, type: "vision_changes", label: "Cambios visuales (SANS)",
-        value: "Sí", unit: "", status: "red", protocol: SANS_PROTOCOL
+        check, type: "vision_changes", label: "Visual changes (SANS)",
+        value: "Yes", unit: "", status: "red", protocol: SANS_PROTOCOL
       )
     end
 
     if check.dizziness_nausea
       zone_statuses["chest"] = worst_status(zone_statuses["chest"], "yellow")
       zone_indicators["chest"] << research_indicator(
-        check, type: "dizziness_nausea", label: "Mareo / náusea (Standard Measures)",
-        value: "Sí", unit: "", status: "yellow", protocol: SENSORIMOTOR_PROTOCOL
+        check, type: "dizziness_nausea", label: "Dizziness / nausea (Standard Measures)",
+        value: "Yes", unit: "", status: "yellow", protocol: SENSORIMOTOR_PROTOCOL
       )
     end
 
@@ -226,15 +250,15 @@ class HealthEvaluator
         systemic_alert = true
         zone_statuses["immune"] = "red"
         zone_indicators["immune"] << research_indicator(
-          assessment, type: "virus_reactivation_suspected", label: "Reactivación viral sospechada",
-          value: "Sí", unit: "", status: "red", protocol: IMMUNE_PROTOCOL
+          assessment, type: "virus_reactivation_suspected", label: "Suspected viral reactivation",
+          value: "Yes", unit: "", status: "red", protocol: IMMUNE_PROTOCOL
         )
         notes[:all] = IMMUNE_PROTOCOL
       elsif !assessment.saliva_sample_taken
         zone_statuses["immune"] = worst_status(zone_statuses["immune"], "yellow")
         zone_indicators["immune"] << research_indicator(
-          assessment, type: "saliva_sample_taken", label: "Muestra de saliva seca",
-          value: "Pendiente", unit: "", status: "yellow", protocol: SALIVA_SAMPLE_PROTOCOL
+          assessment, type: "saliva_sample_taken", label: "Dry saliva sample",
+          value: "Pending", unit: "", status: "yellow", protocol: SALIVA_SAMPLE_PROTOCOL
         )
       end
 
@@ -248,18 +272,18 @@ class HealthEvaluator
       if oct_status == "yellow" || vision_overdue
         zone_statuses["head"] = worst_status(zone_statuses["head"], "yellow")
         detail = []
-        detail << "OCT con resultado #{assessment.oct_scan_result}" unless assessment.oct_scan_result == "normal"
-        detail << "prueba visual vencida (> 7 días)" if vision_overdue
+        detail << "OCT result: #{assessment.oct_scan_result}" unless assessment.oct_scan_result == "normal"
+        detail << "visual test overdue (> 7 days)" if vision_overdue
         zone_indicators["head"] << research_indicator(
-          assessment, type: "sans_study", label: "Estudio SANS (OCT / visión)",
+          assessment, type: "sans_study", label: "SANS study (OCT / vision)",
           value: detail.join(" · "), unit: "", status: "yellow", protocol: SANS_STUDY_PROTOCOL
         )
       end
 
       unless assessment.b_complex_supplement_taken
         zone_indicators["head"] << research_indicator(
-          assessment, type: "b_complex_supplement", label: "Suplemento B-Complex",
-          value: "Pendiente", unit: "", status: "yellow", protocol: SANS_STUDY_PROTOCOL
+          assessment, type: "b_complex_supplement", label: "B-Complex supplement",
+          value: "Pending", unit: "", status: "yellow", protocol: SANS_STUDY_PROTOCOL
         )
       end
 
@@ -269,7 +293,7 @@ class HealthEvaluator
       if %w[yellow red].include?(calcium_status)
         zone_statuses["limbs"] = worst_status(zone_statuses["limbs"], calcium_status)
         zone_indicators["limbs"] << research_indicator(
-          assessment, type: "calcium_isotopes_level", label: "Calcio / Bone Health (CIPHER)",
+          assessment, type: "calcium_isotopes_level", label: "Calcium / Bone Health (CIPHER)",
           value: format_value(assessment.calcium_isotopes_level), unit: "mg/dL",
           status: calcium_status, protocol: CIPHER_BONE_PROTOCOL
         )
@@ -280,7 +304,7 @@ class HealthEvaluator
       if %w[yellow red].include?(telomere_status)
         zone_statuses["limbs"] = worst_status(zone_statuses["limbs"], telomere_status)
         zone_indicators["limbs"] << research_indicator(
-          assessment, type: "telomere_length", label: "Telómeros / envejecimiento (CIPHER)",
+          assessment, type: "telomere_length", label: "Telomeres / aging (CIPHER)",
           value: format_value(assessment.telomere_length), unit: "kb",
           status: telomere_status, protocol: CIPHER_BONE_PROTOCOL
         )
@@ -291,9 +315,9 @@ class HealthEvaluator
       if %w[yellow red].include?(spatial_status)
         zone_statuses["head"] = worst_status(zone_statuses["head"], spatial_status)
         zone_indicators["head"] << research_indicator(
-          assessment, type: "spatial_cognition_score", label: "Cognición espacial (CIPHER)",
+          assessment, type: "spatial_cognition_score", label: "Spatial cognition (CIPHER)",
           value: assessment.spatial_cognition_score, unit: "/100",
-          status: spatial_status, protocol: "Estudio CIPHER: rendimiento de cognición espacial bajo. Repetir test y vigilar fatiga."
+          status: spatial_status, protocol: "CIPHER study: low spatial cognition performance. Repeat the test and watch for fatigue."
         )
       end
 
@@ -302,9 +326,9 @@ class HealthEvaluator
       if vestibular_status == "yellow"
         zone_statuses["limbs"] = worst_status(zone_statuses["limbs"], "yellow")
         zone_indicators["limbs"] << research_indicator(
-          assessment, type: "vestibular_test_passed", label: "Test vestibular (CIPHER)",
-          value: "Pendiente", unit: "", status: "yellow",
-          protocol: "Estudio CIPHER: test vestibular pendiente. Evaluar equilibrio antes de la salida de cápsula."
+          assessment, type: "vestibular_test_passed", label: "Vestibular test (CIPHER)",
+          value: "Pending", unit: "", status: "yellow",
+          protocol: "CIPHER study: vestibular test pending. Assess balance before capsule egress."
         )
       end
 
@@ -318,8 +342,8 @@ class HealthEvaluator
         status = worst_status(cognitive_status, actigraphy_status)
         zone_statuses["psychological"] = worst_status(zone_statuses["psychological"], status)
         zone_indicators["psychological"] << research_indicator(
-          assessment, type: "archer_study", label: "ARCHeR: fatiga y sueño",
-          value: cognitive_status == "green" ? "Actigrafía sin sincronizar" : "Rendimiento cognitivo bajo",
+          assessment, type: "archer_study", label: "ARCHeR: fatigue and sleep",
+          value: cognitive_status == "green" ? "Actigraphy not synced" : "Low cognitive performance",
           unit: "", status: status, protocol: ARCHER_FATIGUE_PROTOCOL
         )
       end
@@ -337,7 +361,7 @@ class HealthEvaluator
       zone_statuses["limbs"] = worst_status(zone_statuses["limbs"], "yellow")
       zone_indicators["limbs"] << research_indicator(
         pre_eva_check, type: "egress_fitness_completed", label: "Egress Fitness (CIPHER)",
-        value: "Pendiente", unit: "", status: "yellow", protocol: CIPHER_EGRESS_PROTOCOL
+        value: "Pending", unit: "", status: "yellow", protocol: CIPHER_EGRESS_PROTOCOL
       )
     end
 
@@ -442,7 +466,7 @@ class HealthEvaluator
     def display_value(field, value)
       case field.to_s
       when "vision_blurred", "dizziness_reported", "skin_rash"
-        value ? "Sí" : "No"
+        value ? "Yes" : "No"
       when "stress_level", "co2_level", "calories_intake"
         value.to_i
       else
@@ -462,11 +486,19 @@ class HealthEvaluator
   # Devuelve "green", "yellow" o "red". Si el indicador no tiene umbrales,
   # degrada a "green" para no bloquear la captura de datos. Una desviación
   # > 20 % respecto a la línea base pre-vuelo escala un verde a amarillo.
+  # Un valor extremo confirmado por el usuario siempre activa alerta crítica.
   def status
+    return "red" if confirmed_extreme?
+
     calculated = threshold_status
     return calculated unless calculated == "green"
 
     baseline_deviation? ? "yellow" : "green"
+  end
+
+  # El usuario confirmó un valor extremo pero posible: alerta crítica explícita.
+  def confirmed_extreme?
+    reading.respond_to?(:confirmed?) && reading.confirmed? && reading.extreme_value?
   end
 
   # Desviación porcentual (absoluta) respecto a la baseline del indicador.
@@ -487,18 +519,36 @@ class HealthEvaluator
   end
 
   # Explicación corta del resultado, útil para el panel lateral.
+  # Para presión arterial usa la categoría AHA (Stage 2 / Hypertensive Crisis).
   def explanation
+    return CONFIRMED_EXTREME_NOTE if confirmed_extreme?
+
     case status
-    when "red" then "Valor fuera del rango de seguridad operacional: requiere atención."
+    when "red"
+      return "#{blood_pressure_category} — value outside the operational safety range: requires attention." if blood_pressure?
+
+      "Value outside the operational safety range: requires attention."
     when "yellow"
       return BASELINE_PROTOCOL if baseline_deviation?
 
-      "Valor en zona de vigilancia: repetir medición y observar tendencia."
-    else "Valor dentro del rango esperado para vuelo espacial."
+      "Value in the watch zone: repeat the measurement and observe the trend."
+    else "Value within the expected range for spaceflight."
     end
   end
 
   private
+
+  def blood_pressure?
+    %w[blood_pressure_systolic blood_pressure_diastolic].include?(indicator_type)
+  end
+
+  def blood_pressure_category
+    if indicator_type == "blood_pressure_diastolic"
+      self.class.blood_pressure_category(0, value)
+    else
+      self.class.blood_pressure_category(value, 0)
+    end
+  end
 
   def threshold_status
     return "green" unless THRESHOLDS.key?(indicator_type)

@@ -1,17 +1,17 @@
-# Calcula el retraso de comunicaciones basado en el destino de la misión.
-# Calcula el retraso de comunicaciones basado en el destino de la misión.
+# Calcula el retraso de comunicaciones (one-way) basado en el destino de la misión.
+# Valores aproximados de la demo: la ISS está en órbita baja (near real-time),
+# la Luna ~1.3 s y Marte hasta ~20 min.
 class CommDelay
-  # En minutos.
+  # En segundos.
   DELAYS = {
-    "iss" => 20,
-    "moon" => 30,
-    "mars" => 60
+    "iss" => 0.0,
+    "moon" => 1.3,
+    "mars" => 20 * 60
   }.freeze
 
   def self.call(astronaut)
     destination = astronaut.destination || "iss"
-    minutes = DELAYS.fetch(destination, DELAYS["iss"])
-    minutes * 60
+    DELAYS.fetch(destination, DELAYS["iss"])
   end
 
   def self.seconds_for(astronaut)
@@ -19,7 +19,13 @@ class CommDelay
   end
 
   def self.text_for(astronaut)
-    minutes = (call(astronaut) / 60.0).to_i
-    "Retraso con la Tierra: #{minutes} min"
+    seconds = call(astronaut)
+    if seconds < 1
+      "Delay with Earth: < 1 s (near real-time)"
+    elsif seconds < 60
+      "Delay with Earth: #{format('%.1f', seconds)} s"
+    else
+      "Delay with Earth: #{(seconds / 60.0).round} min"
+    end
   end
 end

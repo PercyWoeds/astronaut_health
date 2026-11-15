@@ -17,15 +17,17 @@ class DashboardTest < ActionDispatch::IntegrationTest
     get_dashboard
 
     assert_response :success
-    assert_match "mediciones pendientes hoy", response.body
-    assert_match "Retraso con la Tierra: 20 min", response.body
+    assert_match "pending measurements today", response.body
+    assert_match "Click a measurement", response.body
+    assert_match "Sleep hours", response.body
+    assert_match "Delay with Earth: &lt; 1 s (near real-time)", response.body
   end
 
   test "muestra las tarjetas de AI Flight Surgeon, Health Score y clima espacial" do
     get_dashboard
 
     assert_response :success
-    assert_match "AI Flight Surgeon", response.body
+    assert_match "Rule-Based Flight Surgeon", response.body
     assert_match "Crew Health Score", response.body
     assert_match "Space Weather", response.body
     assert_match "All systems nominal", response.body
@@ -39,7 +41,7 @@ class DashboardTest < ActionDispatch::IntegrationTest
     get_dashboard
 
     assert_response :success
-    assert_match "Reportar al Cirujano", response.body
+    assert_match "Report to Flight Surgeon", response.body
     assert_match "Systolic BP is elevated", response.body
   end
 

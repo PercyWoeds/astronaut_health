@@ -9,9 +9,9 @@
     <div class="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
       <div class="flex items-start justify-between gap-4">
         <div>
-          <p class="text-xs font-semibold uppercase tracking-[0.18em] text-amber-300">Actividad extravehicular</p>
-          <h2 class="mt-1 text-xl font-semibold text-white">Checklist pre-EVA</h2>
-          <p class="mt-1 text-sm text-slate-400">Los tres checks son obligatorios antes de simular la caminata.</p>
+          <p class="text-xs font-semibold uppercase tracking-[0.18em] text-amber-300">Extravehicular activity</p>
+          <h2 class="mt-1 text-xl font-semibold text-white">Pre-EVA checklist</h2>
+          <p class="mt-1 text-sm text-slate-400">All three checks are mandatory before simulating the spacewalk.</p>
         </div>
         <button type="button" data-action="click->modal#close"
                 class="rounded-lg border border-slate-700 px-2.5 py-1 text-sm text-slate-400 hover:bg-slate-800">✕</button>
@@ -19,8 +19,8 @@
 
       <% if @last_pre_eva_check %>
         <p class="mt-3 rounded-xl border <%= @last_pre_eva_check.ready? ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200' : 'border-rose-500/30 bg-rose-500/10 text-rose-200' %> px-3 py-2 text-xs">
-          Último checklist: <%= @last_pre_eva_check.ready? ? "completo" : "incompleto" %>
-          · Egress: <%= @last_pre_eva_check.egress_fitness_completed? ? "OK" : "pendiente" %>
+          Last checklist: <%= @last_pre_eva_check.ready? ? "complete" : "incomplete" %>
+          · Egress: <%= @last_pre_eva_check.egress_fitness_completed? ? "OK" : "pending" %>
           · <%= relative_time_es(@last_pre_eva_check.checked_at) %>
         </p>
       <% end %>
@@ -28,10 +28,10 @@
       <%= form_with url: pre_eva_checks_path(mission_id: @astronaut.mission_id, astronaut_id: @astronaut.id),
                     scope: :pre_eva_check, method: :post, class: "mt-5 space-y-3" do |form| %>
         <% [
-          { field: :o2_ok, label: "O₂ OK", detail: "Suministro y presión parcial verificados" },
-          { field: :pressure_ok, label: "Presión OK", detail: "Traje y esclusa estables" },
-          { field: :fatigue_ok, label: "Fatiga OK", detail: "Descanso suficiente para la EVA" },
-          { field: :egress_fitness_completed, label: "Egress Fitness completado", detail: "CIPHER · simulacro de salida de cápsula" }
+          { field: :o2_ok, label: "O₂ OK", detail: "Supply and partial pressure verified" },
+          { field: :pressure_ok, label: "Pressure OK", detail: "Suit and airlock stable" },
+          { field: :fatigue_ok, label: "Fatigue OK", detail: "Enough rest for the EVA" },
+          { field: :egress_fitness_completed, label: "Egress Fitness completed", detail: "CIPHER · capsule egress drill" }
         ].each do |check| %>
           <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3 hover:border-amber-500/40">
             <%= form.check_box check[:field], class: "mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-900 accent-amber-500" %>
@@ -44,10 +44,10 @@
 
         <div class="flex items-center justify-end gap-3 pt-2">
           <button type="button" data-action="click->modal#close"
-                  class="rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Cancelar</button>
+                  class="rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Cancel</button>
           <button type="submit"
                   class="rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-400">
-            Verificar pre-EVA
+            Verify pre-EVA
           </button>
         </div>
       <% end %>

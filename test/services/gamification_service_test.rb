@@ -8,7 +8,7 @@ class GamificationServiceTest < ActiveSupport::TestCase
 
   def complete_day!(date)
     {
-      blood_pressure_systolic: 120,
+      blood_pressure_systolic: 118,
       blood_pressure_diastolic: 78,
       heart_rate: 70,
       blood_glucose: 100,
@@ -29,9 +29,9 @@ class GamificationServiceTest < ActiveSupport::TestCase
     awarded = GamificationService.new(@astronaut).call
 
     names = awarded.map(&:name)
-    assert_includes names, "Primer registro"
-    assert_includes names, "Chequeo diario completo"
-    assert_includes names, "Día en verde"
+    assert_includes names, "First reading"
+    assert_includes names, "Complete daily check"
+    assert_includes names, "Green day"
     assert_equal 135, @astronaut.reload.total_points
   end
 
@@ -44,7 +44,7 @@ class GamificationServiceTest < ActiveSupport::TestCase
     complete_day!(2.days.ago)
     awarded = GamificationService.new(@astronaut).call
 
-    assert_equal [ "Racha de 3 días" ], awarded.map(&:name)
+    assert_equal [ "3-day streak" ], awarded.map(&:name)
     assert_equal 235, @astronaut.reload.total_points
   end
 end

@@ -21,6 +21,7 @@ class AiFlightSurgeon
   # Array de strings con las recomendaciones. Si no hay alertas, devuelve la nominal.
   def generate_report
     recommendations = []
+    recommendations << glucose_recommendation if glucose_critical?
     recommendations << sleep_recommendation if sleep_average && sleep_average < SLEEP_THRESHOLD
     recommendations << mood_recommendation if mood_average && mood_average < MOOD_THRESHOLD
     recommendations << systolic_recommendation if systolic_value && systolic_value > SYSTOLIC_THRESHOLD
@@ -29,12 +30,15 @@ class AiFlightSurgeon
     recommendations.empty? ? [ NOMINAL_RECOMMENDATION ] : recommendations
   end
 
-  # Health Score 0-100 según sueño, ánimo, presión sistólica y clima espacial.
+  # Health Score 0-100 según sueño, ánimo, glucosa, presión sistólica/diastólica
+  # y clima espacial (alertas DONKI).
   def calculate_health_score
     score = 100
     score -= 20 if sleep_average && sleep_average < SLEEP_THRESHOLD
     score -= 20 if mood_average && mood_average < MOOD_THRESHOLD
+    score -= 30 if glucose_critical?
     score -= 30 if systolic_value && systolic_value > SYSTOLIC_THRESHOLD
+    score -= 30 if diastolic_critical?
     score -= 20 if solar_events.any?
     [ score, 0 ].max
   end
@@ -61,6 +65,40 @@ class AiFlightSurgeon
       .first
       &.value
       &.to_f
+  end
+
+  # Última glucosa registrada. Crítica fuera de 54-250 mg/dL (ver HealthEvaluator::GLUCOSE).
+  def glucose_value
+    @glucose_value ||= @astronaut
+      .health_readings
+      .for_indicator("blood_glucose")
+      .recent_first
+      .first
+      &.value
+      &.to_f
+  end
+
+  def glucose_critical?
+    range = HealthEvaluator::THRESHOLDS["blood_glucose"]
+    glucose_value && (glucose_value >= range[:red_high] || glucose_value <= range[:red_low])
+  end
+
+  # Última presión diastólica registrada.
+  def diastolic_value
+    @diastolic_value ||= @astronaut
+      .health_readings
+      .for_indicator("blood_pressure_diastolic")
+      .recent_first
+      .first
+      &.value
+      &.to_f
+  end
+
+  # Crítica fuera de los límites rojos de HealthEvaluator::DIASTOLIC
+  # (< 50 o >= 90 mmHg).
+  def diastolic_critical?
+    range = HealthEvaluator::THRESHOLDS["blood_pressure_diastolic"]
+    diastolic_value && (diastolic_value >= range[:red_high] || diastolic_value <= range[:red_low])
   end
 
   # Eventos DONKI recientes. Se memoiza para no repetir la llamada HTTP.

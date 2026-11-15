@@ -17,7 +17,7 @@ export default class extends Controller {
   connect() {
     this.state = "idle"
     this.readyAt = null
-    this.setButton("Iniciar test", "idle")
+    this.setButton("Start test", "idle")
   }
 
   disconnect() {
@@ -44,8 +44,8 @@ export default class extends Controller {
     this.readyAt = null
     this.hideMessages()
     this.resultTarget.textContent = ""
-    this.promptTarget.textContent = "Espera el verde…"
-    this.setButton("Espera el verde…", "waiting")
+    this.promptTarget.textContent = "Wait for green…"
+    this.setButton("Wait for green…", "waiting")
 
     const delay = 2_000 + Math.random() * 3_000
     this.timer = setTimeout(() => this.showReady(), delay)
@@ -54,8 +54,8 @@ export default class extends Controller {
   showReady() {
     this.state = "ready"
     this.readyAt = performance.now()
-    this.promptTarget.textContent = "¡Ahora!"
-    this.setButton("¡HAZ CLIC!", "ready")
+    this.promptTarget.textContent = "Now!"
+    this.setButton("CLICK NOW!", "ready")
   }
 
   finish() {
@@ -64,9 +64,9 @@ export default class extends Controller {
     this.state = "idle"
     this.readyAt = null
 
-    this.promptTarget.textContent = "Test completado. Puedes repetirlo."
-    this.resultTarget.textContent = `Tiempo de reacción: ${reactionMs} ms`
-    this.setButton("Repetir test", "idle")
+    this.promptTarget.textContent = "Test completed. You can repeat it."
+    this.resultTarget.textContent = `Reaction time: ${reactionMs} ms`
+    this.setButton("Repeat test", "idle")
 
     if (reactionMs > 500) {
       this.warningTarget.classList.remove("hidden")
@@ -82,9 +82,9 @@ export default class extends Controller {
     this.state = "idle"
     this.readyAt = null
     this.resultTarget.textContent = ""
-    this.promptTarget.textContent = "Te adelantaste. Inténtalo de nuevo."
-    this.showError("Has hecho clic antes de que apareciera el verde.")
-    this.setButton("Repetir test", "idle")
+    this.promptTarget.textContent = "You jumped the gun. Try again."
+    this.showError("You clicked before the green appeared.")
+    this.setButton("Repeat test", "idle")
   }
 
   async save(reactionMs) {
@@ -105,7 +105,7 @@ export default class extends Controller {
 
       const data = await response.json().catch(() => ({}))
       if (!response.ok) {
-        throw new Error(Array.isArray(data.errors) ? data.errors.join(". ") : "No se pudo guardar el test.")
+        throw new Error(Array.isArray(data.errors) ? data.errors.join(". ") : "Could not save the test.")
       }
 
       document.dispatchEvent(new CustomEvent("health:reading-created", { detail: data }))

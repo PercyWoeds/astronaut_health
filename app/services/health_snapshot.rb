@@ -8,17 +8,28 @@
 #   - ResearchAssessment + PreEvaCheck: estudios Immune, CIPHER, SANS y ARCHeR.
 class HealthSnapshot
   ZONE_NOTES = {
-    "limbs" => "Riesgo de osteoporosis acelerada. Los datos de la ISS (CSA) ayudan a prevenir esto en Tierra."
+    "limbs" => "Accelerated osteoporosis risk. ISS (CSA) data helps prevent this on Earth."
   }.freeze
 
   PSYCHOLOGICAL_ZONE = {
     name: "psychological",
-    description: "Zona psicológica: aislamiento, confinamiento y carga mental durante la misión."
+    description: "Psychological zone: isolation, confinement and mental workload during the mission."
+  }.freeze
+
+  # Indicadores que alimentan la zona psicológica virtual.
+  PSYCHOLOGICAL_TYPES = %w[mood_score sleep_hours social_contact_minutes].freeze
+
+  # Zona principal de cada indicador para mostrar cada alerta una sola vez.
+  # El resto de zonas que lo rastrean lo muestran como etiqueta.
+  PRIMARY_ZONE_OVERRIDES = {
+    "mood_score" => "psychological",
+    "social_contact_minutes" => "psychological",
+    "sleep_hours" => "head"
   }.freeze
 
   IMMUNE_ZONE = {
     name: "immune",
-    description: "Sistema inmune y barreras cutáneas: biomarcadores, virus latentes y muestras biológicas."
+    description: "Immune system and skin barriers: biomarkers, latent viruses and biological samples."
   }.freeze
 
   # Indicadores nuevos que se muestran en zonas existentes aunque la base de
@@ -42,6 +53,7 @@ class HealthSnapshot
     {
       astronaut: astronaut_payload,
       overall_status: overall_status,
+      main_action: main_action,
       zones: zones_payload,
       daily_check: daily_check_payload,
       research_assessment: research_payload,
@@ -140,7 +152,57 @@ class HealthSnapshot
     }
   end
 
+  # Acción principal: el dato crítico más reciente, o la vigilancia si solo
+  # hay amarillo, o el estado nominal. Se muestra una sola vez arriba.
+  def main_action
+    red_items = all_zone_indicators.select { |item| item[:status] == "red" }
+    yellow_items = all_zone_indicators.select { |item| item[:status] == "yellow" }
+
+    if overall_status == "red" && red_items.any?
+      worst = red_items.max_by { |item| item[:measured_at] }
+      { tone: "red", title: alert_title(worst, "critical"), protocol: worst[:recommendation][:text], escalate: true }
+    elsif overall_status == "yellow" && yellow_items.any?
+      worst = yellow_items.max_by { |item| item[:measured_at] }
+      { tone: "yellow", title: alert_title(worst, "under watch"), protocol: worst[:recommendation][:text], escalate: false }
+    else
+      {
+        tone: "green",
+        title: "All zones nominal",
+        protocol: "Continue routine monitoring. Repeat the next scheduled measurement.",
+        escalate: false
+      }
+    end
+  end
+
   def zones_payload
+    @zones_payload ||= build_zones_payload
+  end
+
+  private
+
+  def all_zone_indicators
+    zones_payload.flat_map { |zone| Array(zone[:indicators]) }
+  end
+
+  def alert_title(indicator, level)
+    unit = indicator[:unit].to_s.presence
+    value = unit ? "#{indicator[:value]} #{unit}" : indicator[:value]
+    "#{indicator[:label]} #{value}: #{level}"
+  end
+
+  def primary_zone_by_indicator
+    @primary_zone_by_indicator ||= begin
+      map = {}
+      BodyZone.order(:id).each do |zone|
+        types = (Array(zone.related_indicators) + EXTRA_ZONE_INDICATORS.fetch(zone.name, [])).uniq
+        types.each { |type| map[type] ||= zone.name }
+      end
+      PRIMARY_ZONE_OVERRIDES.each { |type, zone| map[type] = zone }
+      map
+    end
+  end
+
+  def build_zones_payload
     zones = BodyZone.order(:id).map do |zone|
       indicator_types = (Array(zone.related_indicators) + EXTRA_ZONE_INDICATORS.fetch(zone.name, [])).uniq
       extra_statuses = indicator_types.filter_map { |type| readings_by_type[type]&.status }
@@ -181,7 +243,10 @@ class HealthSnapshot
   end
 
   def build_zone(name, description, indicator_types, base_status:)
-    readings = indicator_types.filter_map do |type|
+    primary_types = indicator_types.select { |type| primary_zone_by_indicator.fetch(type, name) == name }
+    shared_types = indicator_types.reject { |type| primary_zone_by_indicator.fetch(type, name) == name }
+
+    readings = primary_types.filter_map do |type|
       reading = readings_by_type[type]
       next unless reading
 
@@ -192,7 +257,22 @@ class HealthSnapshot
         unit: reading.unit,
         status: reading.status,
         measured_at: reading.measured_at.iso8601,
+        category: blood_pressure_category(reading.indicator_type),
+        baseline_note: reading.baseline_note,
         recommendation: RecommendationEngine.for(reading)
+      }
+    end
+
+    shared_alerts = shared_types.filter_map do |type|
+      reading = readings_by_type[type]
+      next unless reading && %w[red yellow].include?(reading.status)
+
+      {
+        label: reading.indicator_label,
+        value: reading.value,
+        unit: reading.unit,
+        status: reading.status,
+        primary_zone: primary_zone_by_indicator.fetch(type, name)
       }
     end
 
@@ -218,8 +298,20 @@ class HealthSnapshot
       description: description,
       status: status,
       note: note_parts.compact.uniq.join(" ").presence,
-      indicators: indicators
+      indicators: indicators,
+      shared_alerts: shared_alerts
     }
+  end
+
+  # Categoría clínica AHA combinada (sistólica + diastólica) para presión arterial.
+  def blood_pressure_category(indicator_type)
+    return nil unless %w[blood_pressure_systolic blood_pressure_diastolic].include?(indicator_type)
+
+    sys = readings_by_type["blood_pressure_systolic"]&.value
+    dia = readings_by_type["blood_pressure_diastolic"]&.value
+    return nil unless sys.present? && dia.present?
+
+    HealthEvaluator.blood_pressure_category(sys, dia)
   end
 
   # Alerta inmune que se replica en todas las zonas: el protocolo indica
@@ -227,8 +319,8 @@ class HealthSnapshot
   def systemic_indicator
     @systemic_indicator ||= {
       type: "systemic_immune_alert",
-      label: "Alerta inmune sistémica",
-      value: "Virus latente sospechado",
+      label: "Systemic immune alert",
+      value: "Suspected latent virus",
       unit: "",
       status: "red",
       measured_at: (research_assessment&.assessed_on&.to_time || Time.current).iso8601,

@@ -8,9 +8,9 @@ class SymptomChecksController < ApplicationController
 
     if @check.update(symptom_check_params)
       if @check.any_symptom?
-        redirect_to dashboard_path, alert: "Síntomas registrados. Revisa las alertas de las zonas afectadas."
+        redirect_to dashboard_path, alert: "Symptoms recorded. Check the alerts for the affected zones."
       else
-        redirect_to dashboard_path, notice: "Chequeo de síntomas guardado: sin novedades."
+        redirect_to dashboard_path, notice: "Symptom check saved: no findings."
       end
     else
       redirect_to dashboard_path, alert: @check.errors.full_messages.to_sentence
@@ -23,7 +23,7 @@ class SymptomChecksController < ApplicationController
     @astronaut = requested_astronaut
     return if @astronaut
 
-    redirect_to root_path, alert: "No hay astronauta configurado. Ejecuta rails db:seed."
+    redirect_to root_path, alert: "No astronaut configured. Run rails db:seed."
   end
 
   def symptom_check_params

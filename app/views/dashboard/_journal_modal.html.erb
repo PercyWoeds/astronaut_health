@@ -1,7 +1,7 @@
-<%# Diario de a bordo: contramedida del riesgo psicosocial de aislamiento. %>
+<%# Onboard journal: contramedida del riesgo psicosocial de aislamiento. %>
 <div data-controller="modal" class="contents">
   <button type="button" data-action="click->modal#open" class="<%= quick_action_button_classes %>">
-    📝 Diario a Bordo
+    📝 Onboard Journal
   </button>
 
   <div data-modal-target="modal" data-action="click->modal#closeOnBackdrop"
@@ -9,9 +9,9 @@
     <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
       <div class="flex items-start justify-between gap-4">
         <div>
-          <p class="text-xs font-semibold uppercase tracking-[0.18em] text-violet-300">Riesgo psicosocial</p>
-          <h2 class="mt-1 text-xl font-semibold text-white">Diario de a bordo</h2>
-          <p class="mt-1 text-sm text-slate-400">Escribe cómo te sientes. El registro ayuda a mitigar el aislamiento.</p>
+          <p class="text-xs font-semibold uppercase tracking-[0.18em] text-violet-300">Psychosocial risk</p>
+          <h2 class="mt-1 text-xl font-semibold text-white">Onboard journal</h2>
+          <p class="mt-1 text-sm text-slate-400">Write how you feel. Journaling helps mitigate isolation.</p>
         </div>
         <button type="button" data-action="click->modal#close"
                 class="rounded-lg border border-slate-700 px-2.5 py-1 text-sm text-slate-400 hover:bg-slate-800">✕</button>
@@ -20,21 +20,21 @@
       <%= form_with url: journal_entries_path(mission_id: @astronaut.mission_id, astronaut_id: @astronaut.id),
                     scope: :journal_entry, method: :post, class: "mt-5 space-y-4" do |form| %>
         <%= form.text_area :content, rows: 5, maxlength: 5_000, required: true,
-              placeholder: "Hoy me he sentido…",
+              placeholder: "Today I felt…",
               class: "w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-violet-500" %>
         <div class="flex items-center justify-end gap-3">
           <button type="button" data-action="click->modal#close"
-                  class="rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Cancelar</button>
+                  class="rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Cancel</button>
           <button type="submit"
                   class="rounded-xl bg-violet-500 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-400">
-            Guardar entrada
+            Save entry
           </button>
         </div>
       <% end %>
 
       <% if @journal_entries.any? %>
         <div class="mt-5 border-t border-slate-800 pt-4">
-          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Entradas recientes</p>
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Recent entries</p>
           <ul class="mt-2 space-y-2">
             <% @journal_entries.each do |entry| %>
               <li class="rounded-xl border border-slate-800 bg-slate-950/60 p-3">

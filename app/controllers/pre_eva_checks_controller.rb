@@ -7,9 +7,9 @@ class PreEvaChecksController < ApplicationController
 
     if @check.save
       if @check.ready?
-        redirect_to dashboard_path, notice: "Checklist pre-EVA y Egress Fitness completos. Actividad autorizada."
+        redirect_to dashboard_path, notice: "Pre-EVA and Egress Fitness checklist complete. Activity authorized."
       else
-        redirect_to dashboard_path, alert: "Checklist incompleto: confirma O2, presión, fatiga y Egress Fitness."
+        redirect_to dashboard_path, alert: "Incomplete checklist: confirm O2, pressure, fatigue and Egress Fitness."
       end
     else
       redirect_to dashboard_path, alert: @check.errors.full_messages.to_sentence
@@ -22,7 +22,7 @@ class PreEvaChecksController < ApplicationController
     @astronaut = requested_astronaut
     return if @astronaut
 
-    redirect_to root_path, alert: "No hay astronauta configurado. Ejecuta rails db:seed."
+    redirect_to root_path, alert: "No astronaut configured. Run rails db:seed."
   end
 
   def pre_eva_check_params

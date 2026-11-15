@@ -7,7 +7,7 @@ class WellnessChecksController < ApplicationController
     values = wellness_params
 
     if values[:meals_completed_percent].blank? && values[:social_contact_minutes].blank?
-      return redirect_to dashboard_path, alert: "Introduce al menos un valor de comidas o contacto social."
+      return redirect_to dashboard_path, alert: "Enter at least one meal or social contact value."
     end
 
     HealthReading.transaction do
@@ -15,7 +15,7 @@ class WellnessChecksController < ApplicationController
       upsert_reading("social_contact_minutes", values[:social_contact_minutes], :social_contact_minutes)
     end
 
-    redirect_to dashboard_path, notice: "Comidas y contacto social actualizados."
+    redirect_to dashboard_path, notice: "Meals and social contact updated."
   rescue ActiveRecord::RecordInvalid => error
     redirect_to dashboard_path, alert: error.record.errors.full_messages.to_sentence
   end
@@ -26,7 +26,7 @@ class WellnessChecksController < ApplicationController
     @astronaut = requested_astronaut
     return if @astronaut
 
-    redirect_to root_path, alert: "No hay astronauta configurado. Ejecuta rails db:seed."
+    redirect_to root_path, alert: "No astronaut configured. Run rails db:seed."
   end
 
   def wellness_params

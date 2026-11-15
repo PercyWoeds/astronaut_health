@@ -26,6 +26,6 @@ class GroundReport < ApplicationRecord
   end
 
   def self.default_summary(alert)
-    "Alerta de #{alert.indicator.label}: #{alert.level} (#{alert.basis})"
+    "Alert for #{alert.indicator.label}: #{alert.level} (#{alert.basis})"
   end
 end

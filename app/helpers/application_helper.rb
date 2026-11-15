@@ -1,28 +1,30 @@
 module ApplicationHelper
-  STATUS_LABELS_ES = {
+  # Las vistas siguen llamando a status_label_es / relative_time_es (no se
+  # renombran), pero los textos visibles se devuelven en inglés.
+  STATUS_LABELS = {
     "green" => "Normal",
-    "yellow" => "Vigilar",
-    "red" => "Crítico",
-    "unknown" => "Sin datos"
+    "yellow" => "Watch",
+    "red" => "Critical",
+    "unknown" => "No data"
   }.freeze
 
   def status_label_es(status)
-    STATUS_LABELS_ES[status.to_s] || status.to_s
+    STATUS_LABELS[status.to_s] || status.to_s
   end
 
   def relative_time_es(time)
     return "" unless time
 
     seconds = (Time.current - time).to_i
-    return "Ahora" if seconds < 60
+    return "Now" if seconds < 60
 
     minutes = seconds / 60
-    return "Hace #{minutes} min" if minutes < 60
+    return "#{minutes} min ago" if minutes < 60
 
     hours = minutes / 60
-    return "Hace #{hours} h" if hours < 24
+    return "#{hours} h ago" if hours < 24
 
-    "Hace #{hours / 24} d"
+    "#{hours / 24} d ago"
   end
 
   # Estilo común de la barra de acciones rápidas (Mission Control).
