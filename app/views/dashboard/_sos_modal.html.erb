@@ -14,7 +14,7 @@
 
     <p data-sos-target="message"
        class="mt-4 rounded-xl border border-rose-500/25 bg-rose-500/5 p-4 text-sm leading-relaxed text-rose-100">
-      Simulated link: transmitting telemetry. Reference delay: <%= @comm_delay_text.presence || "low-latency link simulated" %>.
+      Simulated link: transmitting telemetry. <%= @comm_delay_text.presence || "Delay with Earth: low-latency link simulated" %>.
     </p>
 
     <div class="mt-5">

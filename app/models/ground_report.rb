@@ -11,13 +11,13 @@ class GroundReport < ApplicationRecord
   scope :awaiting_reply, -> { where(status: "sent") }
 
   def self.create_for_alert(alert, summary: nil)
-    delay_seconds = CommDelay.seconds_for(alert.astronaut)
+    round_trip_seconds = CommDelay.round_trip_seconds_for(alert.astronaut)
     create!(
       alert: alert,
       summary: summary.presence || default_summary(alert),
       sent_day: Date.current,
       status: "sent",
-      earliest_reply_at: Time.current + delay_seconds.seconds
+      earliest_reply_at: Time.current + round_trip_seconds.seconds
     )
   end
 

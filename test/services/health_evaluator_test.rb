@@ -269,4 +269,18 @@ class HealthEvaluatorTest < ActiveSupport::TestCase
 
     refute HealthEvaluator.new(reading).confirmed_extreme?
   end
+
+  test "los niveles de alerta no llaman crítico a un umbral rutinario" do
+    assert_equal "Normal", HealthEvaluator.alert_label("green")
+    assert_equal "Follow-up", HealthEvaluator.alert_label("yellow")
+    assert_equal "Medical evaluation", HealthEvaluator.alert_label("red")
+    assert_equal HealthEvaluator::EMERGENCY_LABEL, HealthEvaluator.alert_label("red", confirmed_extreme: true)
+  end
+
+  test "cada referencia declara su alcance y Mars no usa el umbral terrestre" do
+    assert_match "AHA", HealthEvaluator.reference_scope_for("blood_pressure_systolic")
+    assert_match "not flight-validated", HealthEvaluator.reference_scope_for("blood_pressure_systolic")
+    assert_match "ISS reference points", HealthEvaluator.reference_scope_for("co2_level")
+    assert_match "team-defined", HealthEvaluator.reference_scope_for("sleep_hours").downcase
+  end
 end

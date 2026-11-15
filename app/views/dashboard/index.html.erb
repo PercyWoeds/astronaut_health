@@ -38,6 +38,7 @@
      data-health-form-url-value="<%= health_readings_path(mission_id: @current_mission&.id, astronaut_id: @astronaut&.id) %>"
      data-offline-url-value="<%= health_readings_path(mission_id: @current_mission&.id, astronaut_id: @astronaut&.id) %>"
      data-hrp-risks-url-value="<%= api_hrp_risks_path(mission_id: @current_mission&.id, astronaut_id: @astronaut&.id) %>"
+     data-environment-delays-value="<%= @comm_delays.to_json %>"
      data-health-charts-url-value="<%= chart_data_api_health_readings_path(mission_id: @current_mission&.id, astronaut_id: @astronaut&.id) %>">
 
   <%# ---------- Flash notices ---------- %>
@@ -183,7 +184,7 @@
           </div>
         </div>
         <% if @health_score_capped %>
-          <p class="mt-2 text-center text-[10px] font-semibold uppercase tracking-wider text-rose-300">Critical zone present</p>
+          <p class="mt-2 text-center text-[10px] font-semibold uppercase tracking-wider text-rose-300">Medical evaluation zone present</p>
         <% end %>
         <p class="mt-3 text-center text-[11px] leading-relaxed text-gray-400">
           Based on sleep, mood, systolic and diastolic BP, glucose and DONKI solar alerts.
@@ -192,7 +193,7 @@
         <div data-disclosure-target="panel" class="mt-3 hidden rounded-lg border border-gray-700 bg-gray-900 p-2.5">
           <% if @health_score_capped %>
             <p class="mb-2 rounded-md border border-rose-500/30 bg-rose-500/10 px-2 py-1 text-[10px] leading-snug text-rose-200">
-              Score capped at <%= health_score %> while a zone remains critical.
+              Score capped at <%= health_score %> while a zone requires medical evaluation.
             </p>
           <% end %>
           <% if @health_score_discounts.any? %>
@@ -318,9 +319,10 @@
                       · <span class="text-cyan-300"><%= reading.baseline_note %></span>
                     <% end %>
                   </p>
+                  <p class="mt-0.5 text-[10px] text-slate-500"><%= reference_scope_label(reading.indicator_type) %></p>
                 </div>
-                <span class="inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase <%= status_pill[reading.status] %>">
-                  <%= status_label_es(reading.status) %>
+                <span class="inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase <%= status_pill[reading.status] %>">
+                  <span aria-hidden="true"><%= status_icon(reading.status) %></span><%= reading_alert_label(reading) %>
                 </span>
               </li>
             <% end %>
@@ -353,8 +355,8 @@
 
           <details class="mt-5 rounded-xl border border-slate-700 bg-slate-950/40 p-3 text-xs leading-relaxed text-slate-300">
             <summary class="cursor-pointer font-medium text-cyan-300">How zone status works</summary>
-            <p class="mt-2">The overall status takes the worst indicator of the worst zone: if the chest is critical, the whole set is marked critical even if another zone is only under watch.</p>
-            <p class="mt-1">Each zone color reflects its worst indicator. A single red value triggers Flight Surgeon review.</p>
+            <p class="mt-2">The overall status takes the worst indicator of the worst zone: if the chest requires medical evaluation, the whole set is marked that way even if another zone only needs follow-up.</p>
+            <p class="mt-1">Each zone color reflects its worst indicator. A single red value triggers Flight Surgeon review, but it is not a diagnosis.</p>
           </details>
         </div>
       </aside>
@@ -503,6 +505,7 @@
               <tr>
                 <td class="py-2.5 pr-4 text-slate-300">
                   <%= reading.indicator_label %>
+                  <span class="mt-0.5 block text-[10px] text-slate-500"><%= reference_scope_label(reading.indicator_type) %></span>
                   <% if reading.is_baseline? %>
                     <span class="ml-1 rounded-full border border-cyan-500/40 bg-cyan-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-cyan-200">pre</span>
                   <% end %>
@@ -513,7 +516,8 @@
                 <td class="py-2.5 pr-4 font-medium text-slate-100"><%= reading.value %> <span class="text-xs text-slate-500"><%= reading.unit %></span></td>
                 <td class="py-2.5 pr-4">
                   <span class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-semibold uppercase <%= status_pill[reading.status] %>">
-                    <span class="h-1.5 w-1.5 rounded-full <%= status_dot[reading.status] %>"></span><%= status_label_es(reading.status) %>
+                    <span class="h-1.5 w-1.5 rounded-full <%= status_dot[reading.status] %>"></span>
+                    <span aria-hidden="true"><%= status_icon(reading.status) %></span><%= reading_alert_label(reading) %>
                   </span>
                 </td>
                 <td class="py-2.5 text-slate-400"><%= reading.measured_at.strftime("%d/%m/%Y %H:%M") %></td>
@@ -557,15 +561,15 @@
 
         <div class="mt-3 rounded-xl border border-slate-700 bg-slate-950/50 px-3 py-2.5">
           <p class="text-[10px] font-semibold uppercase tracking-wider text-cyan-400">Comms &amp; autonomy</p>
-          <p data-environment-target="protocol" class="mt-1 text-sm font-medium text-gray-200">One-way delay: &lt; 1 s. Autonomous protocol active.</p>
+          <p data-environment-target="protocol" class="mt-1 text-sm font-medium text-gray-200"><%= CommDelay.protocol_for(@astronaut&.destination || "iss") %></p>
         </div>
 
         <% if @astronaut %>
           <% if overall == "red" %>
             <div class="mt-3 rounded-xl border border-rose-500/40 bg-rose-500/10 p-3">
-              <p class="text-[11px] font-semibold uppercase tracking-wider text-rose-300">Critical zone detected</p>
+              <p class="text-[11px] font-semibold uppercase tracking-wider text-rose-300">Medical evaluation zone detected</p>
               <p class="mt-1 text-xs leading-relaxed text-rose-200">
-                <%= alert_zone_names.presence || "A monitored zone is in a critical state" %>.
+                <%= alert_zone_names.presence || "A monitored zone requires medical evaluation" %>.
               </p>
               <ol class="mt-2 list-decimal space-y-0.5 pl-4 text-xs leading-relaxed text-rose-200">
                 <li>Re-measure in 5 min.</li>
@@ -587,7 +591,7 @@
           <% else %>
             <div class="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3">
               <p class="text-[11px] font-semibold uppercase tracking-wider text-emerald-300">All zones nominal</p>
-              <p class="mt-1 text-xs leading-relaxed text-emerald-200">No critical zones. Continue routine monitoring.</p>
+              <p class="mt-1 text-xs leading-relaxed text-emerald-200">No zones require medical evaluation. Continue routine monitoring.</p>
             </div>
           <% end %>
         <% end %>
@@ -706,7 +710,7 @@
     </div>
   </div>
 
-  <%# SOS modal (opened from the side panel when the zone is critical) %>
+  <%# SOS modal (opened from the side panel when the zone requires medical evaluation) %>
   <%= render "dashboard/sos_modal" %>
 
   <%# Link / offline mode toast %>

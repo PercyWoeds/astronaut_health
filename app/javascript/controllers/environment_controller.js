@@ -1,43 +1,26 @@
 import { Controller } from "@hotwired/stimulus"
 
-const ENVIRONMENTS = {
+// Delay values come from CommDelay (server) so the demo and the published app
+// use the same reference text. Communication delay is informational only: it
+// never changes a health status or turns a zone into Follow-up.
+const FALLBACK = {
   iss: {
-    delay: "< 1 s",
-    radiation: "Low",
-    tone: "green",
-    progress: 20,
-    protocol: "One-way delay: < 1 s. Autonomous protocol active."
+    delay: "< 1 s (simulated low-latency link)",
+    protocol: "One-way delay: < 1 s (simulated low-latency link). Autonomous protocol active. Communication delay is informational and does not change the health status."
   },
   moon: {
-    delay: "1.3 s",
-    radiation: "Medium",
-    tone: "yellow",
-    progress: 50,
-    protocol: "One-way delay: 1.3 s. Autonomous protocol active."
+    delay: "≈ 1.3 s",
+    protocol: "One-way delay: ≈ 1.3 s. Autonomous protocol active. Communication delay is informational and does not change the health status."
   },
   mars: {
-    delay: "20 min",
-    radiation: "High",
-    tone: "red",
-    progress: 85,
-    protocol: "One-way delay: 20 min. Autonomous protocol active."
+    delay: "11 min 22 s (demo value; real range: a few minutes to more than 20 min)",
+    protocol: "One-way delay: 11 min 22 s (demo value). Autonomous protocol active. Communication delay is informational and does not change the health status."
   }
-}
-
-const BADGE_TONES = {
-  green: ["bg-emerald-500/15", "text-emerald-300", "border-emerald-500/40"],
-  yellow: ["bg-amber-500/15", "text-amber-300", "border-amber-500/40"],
-  red: ["bg-rose-500/15", "text-rose-300", "border-rose-500/40"]
-}
-
-const BAR_TONES = {
-  green: ["bg-emerald-400"],
-  yellow: ["bg-amber-400"],
-  red: ["bg-rose-400"]
 }
 
 export default class extends Controller {
   static targets = ["select", "protocol", "delayNote"]
+  static values = { delays: { type: Object, default: {} } }
 
   connect() {
     this.apply(this.selectTarget.value)
@@ -48,10 +31,9 @@ export default class extends Controller {
   }
 
   apply(key) {
-    const environment = ENVIRONMENTS[key] || ENVIRONMENTS.iss
+    const environment = this.delaysValue[key] || FALLBACK[key] || FALLBACK.iss
 
     this.updateDelay(environment)
-    this.updateRadiation(environment)
 
     if (this.hasDelayNoteTarget) {
       this.delayNoteTarget.textContent = `Delay with Earth: ${environment.delay}`
@@ -68,27 +50,5 @@ export default class extends Controller {
 
     const value = row.querySelector("[data-hrp-value]")
     if (value) value.textContent = `Delay: ${environment.delay}`
-  }
-
-  updateRadiation(environment) {
-    const row = this.element.querySelector('[data-hrp-risk="radiation"]')
-    if (!row) return
-
-    const badge = row.querySelector("[data-hrp-badge]")
-    if (badge) {
-      badge.textContent = environment.radiation
-      this.swapTones(badge, BADGE_TONES, environment.tone)
-    }
-
-    const bar = row.querySelector("[data-hrp-bar]")
-    if (bar) {
-      bar.style.width = `${environment.progress}%`
-      this.swapTones(bar, BAR_TONES, environment.tone)
-    }
-  }
-
-  swapTones(element, palette, tone) {
-    Object.values(palette).flat().forEach((className) => element.classList.remove(className))
-    element.classList.add(...(palette[tone] || palette.green))
   }
 }

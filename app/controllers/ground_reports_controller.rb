@@ -17,7 +17,7 @@ class GroundReportsController < ApplicationController
     report = GroundReport.create_for_alert(alert, summary: params[:summary])
 
     redirect_to root_path(mission_id: @astronaut.mission_id, astronaut_id: @astronaut.id),
-                notice: "Report sent to Earth. Estimated reply at #{report.earliest_reply_at.to_time.strftime('%H:%M')}."
+                notice: "Report queued (simulated link). Earliest reply after the round trip: #{report.earliest_reply_at.to_time.strftime('%H:%M')}."
   rescue ActiveRecord::RecordInvalid => e
     redirect_to root_path(mission_id: @astronaut.mission_id, astronaut_id: @astronaut.id),
                 alert: e.record.errors.full_messages.to_sentence

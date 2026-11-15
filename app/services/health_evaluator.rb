@@ -83,9 +83,43 @@ class HealthEvaluator
     "social_contact_minutes" => SOCIAL_CONTACT
   }.freeze
 
+  ALERT_LEVELS = {
+    "green" => "Normal",
+    "yellow" => "Follow-up",
+    "red" => "Medical evaluation",
+    "unknown" => "No data"
+  }.freeze
+
+  # Only a value the user explicitly confirmed as extreme is presented as a
+  # possible emergency. A routine threshold crossing is never called critical.
+  EMERGENCY_LABEL = "Possible emergency: follow mission medical protocols".freeze
+
+  # Scope of each reference. "team-defined" means the Quipu Space team chose
+  # the operational range and it is not a validated flight standard.
+  REFERENCE_SCOPES = {
+    "blood_pressure_systolic" => "Terrestrial reference (AHA); not flight-validated",
+    "blood_pressure_diastolic" => "Terrestrial reference (AHA); not flight-validated",
+    "blood_glucose" => "Terrestrial reference (ADA); not flight-validated",
+    "heart_rate" => "Team-defined operational range (unverified)",
+    "body_temperature" => "Team-defined operational range (unverified)",
+    "sleep_hours" => "Team-defined operational range (unverified)",
+    "mood_score" => "Team-defined screening range (unverified)",
+    "reaction_time" => "Team-defined research threshold (unverified)",
+    "meals_completed_percent" => "Team-defined operational range (unverified)",
+    "social_contact_minutes" => "Team-defined screening range (unverified)",
+    "co2_level" => CO2_REFERENCE_LABEL,
+    "bone_density_loss_percent" => "Research/ISS reference (unverified for this app)",
+    "stress_level" => "Team-defined screening range (unverified)",
+    "calories_intake" => "Team-defined operational range (unverified)",
+    "hydration_ml" => "Crew water supply requirement (OCHMO-TB-027); not a clinical target",
+    "muscle_performance" => "Experimental self-check; not a strength measurement",
+    "balance" => "Experimental self-check; not a validated clinical test",
+    "radiation" => "NASA-STD-3001 career limit; dose in this app is simulated"
+  }.freeze
+
   BASELINE_DEVIATION_PERCENT = 20
   BASELINE_PROTOCOL = "Deviation from the pre-flight baseline; may reflect adaptation to microgravity."
-  CONFIRMED_EXTREME_NOTE = "Confirmed extreme value. Critical alert activated."
+  CONFIRMED_EXTREME_NOTE = "Confirmed extreme value. Follow the mission medical protocol."
   COGNITIVE_FATIGUE_PROTOCOL = "Cognitive fatigue detected. Rest recommended (CIPHER / Spatial Cognition)."
   NUTRITION_INADEQUATE_PROTOCOL = "Inadequate Nutrition risk. Review the meal plan and caloric intake."
   ISOLATION_PROTOCOL = "Isolation risk (ARCHeR). Schedule contact with the crew and with Earth."
@@ -191,6 +225,16 @@ class HealthEvaluator
   # El peor estado entre varios semáforos (criterio conservador de vuelo).
   def self.worst_status(*statuses)
     statuses.compact.min_by { |status| STATUS_RANK.fetch(status.to_s, 9) } || "green"
+  end
+
+  def self.alert_label(status, confirmed_extreme: false)
+    return EMERGENCY_LABEL if confirmed_extreme
+
+    ALERT_LEVELS.fetch(status.to_s, ALERT_LEVELS["unknown"])
+  end
+
+  def self.reference_scope_for(indicator_type)
+    REFERENCE_SCOPES.fetch(indicator_type.to_s, "Team-defined operational range (unverified)")
   end
 
   # CO₂ unit conversion from the verified reference block: ppm = mmHg × 1304.34.

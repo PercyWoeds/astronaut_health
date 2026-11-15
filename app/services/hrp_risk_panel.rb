@@ -102,18 +102,20 @@ class HrpRiskPanel
   end
 
   # 3. Distancia a la Tierra: retardo de comunicaciones (one-way) según destino.
-  # ISS ~0 s (órbita baja), Luna ~1.3 s y Marte ~20 min.
+  # Luna ~1.3 s; Marte de pocos minutos a >20 min (ejemplo medido 11 min 22 s);
+  # ISS es un enlace de baja latencia simulado.
   # Solo informativo: no cambia el estado de la zona.
   def distance_risk
-    seconds = CommDelay.seconds_for(@astronaut)
+    destination = @astronaut&.destination || "iss"
     {
       key: "distance",
       name: "Distance to Earth",
       icon: "🛰️",
-      value_label: "Delay: #{delay_label(seconds)}",
+      value_label: "Delay: #{CommDelay.format_delay(CommDelay.seconds_for_destination(destination))}",
       detail: "One-way link with Houston · informative only",
       note: nil,
-      hint: "Comm delay is informational. It does not change the health status.",
+      hint: "#{CommDelay::SOURCES.fetch(destination, CommDelay::SOURCES["iss"])} " \
+            "Comm delay is informational. It does not change the health status.",
       status: "unknown",
       progress: 0
     }
@@ -213,10 +215,4 @@ class HrpRiskPanel
     value.to_f % 1 == 0 ? value.to_i.to_s : format("%.1f", value)
   end
 
-  def delay_label(seconds)
-    return "< 1 s" if seconds < 1
-    return "#{format('%.1f', seconds)} s" if seconds < 60
-
-    "#{(seconds / 60.0).round} min"
-  end
 end

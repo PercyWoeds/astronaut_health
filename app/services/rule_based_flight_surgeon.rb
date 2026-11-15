@@ -145,18 +145,18 @@ class RuleBasedFlightSurgeon
   end
 
   def diastolic_recommendation
-    "❤️ Diastolic BP is critical (#{diastolic_value.round} mmHg). " \
+    "❤️ Diastolic BP is in the medical-evaluation range (#{diastolic_value.round} mmHg). " \
       "Cardiovascular risk. Recommendation: Rest 5 min, re-measure and report if it persists."
   end
 
   def glucose_recommendation
-    "🩸 Blood glucose is critical (#{glucose_value.round} mg/dL). " \
-      "Metabolic risk. Recommendation: treat hypoglycemia/hyperglycemia and notify the Flight Surgeon."
+    "🩸 Blood glucose is in the medical-evaluation range (#{glucose_value.round} mg/dL). " \
+      "Metabolic risk. Recommendation: follow the metabolic protocol and notify the Flight Surgeon."
   end
 
   def solar_recommendation
-    "☢️ Recent Solar Particle Events detected. Radiation risk is HIGH. " \
-      "Recommendation: Move to shielded sleep station."
+    "☢️ DONKI reports recent Solar Particle Events. This app does not measure radiation. " \
+      "Recommendation: follow the mission radiation-shelter protocol."
   end
 
   def format_decimal(value)

@@ -20,7 +20,7 @@ class DashboardTest < ActionDispatch::IntegrationTest
     assert_match "pending measurements today", response.body
     assert_match "Click a measurement", response.body
     assert_match "Sleep hours", response.body
-    assert_match "Delay with Earth: &lt; 1 s (near real-time)", response.body
+    assert_match "Delay with Earth: &lt; 1 s (simulated low-latency link)", response.body
   end
 
   test "muestra las tarjetas de Rule-Based Flight Surgeon, Health Score y clima espacial" do
@@ -33,7 +33,7 @@ class DashboardTest < ActionDispatch::IntegrationTest
     assert_match "All systems nominal", response.body
   end
 
-  test "muestra el botón Reportar al Cirujano cuando hay una zona crítica" do
+  test "muestra el botón Report to Flight Surgeon cuando una zona requiere evaluación médica" do
     @astronaut.health_readings.create!(
       indicator_type: "blood_pressure_systolic", value: 150, measured_at: Time.current
     )

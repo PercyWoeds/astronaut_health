@@ -777,7 +777,7 @@ export default class extends Controller {
     this.animationId = requestAnimationFrame(this.animate)
     this.controls.update()
 
-    // Subtle pulse only when the selected zone is critical.
+    // Subtle pulse only when the selected zone requires medical evaluation.
     if (this.marker?.visible) {
       this.marker.quaternion.copy(this.camera.quaternion)
       const critical = this.selectedZone?.status === "red"
@@ -885,7 +885,7 @@ export default class extends Controller {
       .map((indicator) => indicator.label)
       .filter(Boolean)
     const cause = causeLabels.length ? causeLabels.slice(0, 3).join(" and ") : (zone.description || "")
-    const causePrefix = status === "red" ? "Critical due to:" : status === "yellow" ? "Under watch due to:" : ""
+    const causePrefix = status === "red" ? "Medical evaluation due to:" : status === "yellow" ? "Follow-up due to:" : ""
 
     const badgeFor = (value) => {
       return {
@@ -998,7 +998,7 @@ export default class extends Controller {
     this.overallTarget.innerHTML = `
       <span class="inline-block h-2 w-2 rounded-full ${status === "red" ? "bg-rose-400" : status === "yellow" ? "bg-amber-400" : "bg-emerald-400"}"></span>
       Overall status: <span class="font-semibold uppercase">${this.escape(STATUS_LABELS[status] || status)}</span>
-      ${alertZones.length && status !== "green" ? `<span class="text-xs font-normal opacity-80">· ${status === "red" ? "critical zones" : "zones under watch"}: ${this.escape(alertNames)}</span>` : ""}
+      ${alertZones.length && status !== "green" ? `<span class="text-xs font-normal opacity-80">· ${status === "red" ? "zones requiring medical evaluation" : "zones needing follow-up"}: ${this.escape(alertNames)}</span>` : ""}
     `
 
     if (this.hasAlertTarget) {

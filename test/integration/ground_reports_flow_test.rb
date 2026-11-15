@@ -15,6 +15,8 @@ class GroundReportsFlowTest < ActionDispatch::IntegrationTest
     assert_equal "sent", report.status
     assert_equal Date.current, report.sent_day
     assert report.earliest_reply_at.present?
+    expected_delay = 2 * CommDelay.seconds_for(@astronaut)
+    assert_in_delta report.created_at.to_f + expected_delay, report.earliest_reply_at.to_f, 2
     gr = report.alert
     assert_equal "mars", gr.astronaut.destination
   end

@@ -58,7 +58,7 @@ class RuleBasedFlightSurgeonTest < ActiveSupport::TestCase
 
     surgeon = RuleBasedFlightSurgeon.new(@astronaut, space_weather: [])
 
-    assert(surgeon.generate_report.any? { |line| line.include?("Blood glucose is critical") })
+    assert(surgeon.generate_report.any? { |line| line.include?("Blood glucose is in the medical-evaluation range") })
     assert_equal 70, surgeon.calculate_health_score
   end
 
@@ -69,14 +69,14 @@ class RuleBasedFlightSurgeonTest < ActiveSupport::TestCase
 
     surgeon = RuleBasedFlightSurgeon.new(@astronaut, space_weather: [])
 
-    assert(surgeon.generate_report.any? { |line| line.include?("Diastolic BP is critical") })
+    assert(surgeon.generate_report.any? { |line| line.include?("Diastolic BP is in the medical-evaluation range") })
     assert_equal 70, surgeon.calculate_health_score
   end
 
   test "eventos solares generan alerta y restan 20 puntos" do
     surgeon = RuleBasedFlightSurgeon.new(@astronaut, space_weather: [ { "sepID" => "SEP-1" } ])
 
-    assert(surgeon.generate_report.any? { |line| line.include?("Recent Solar Particle Events") })
+    assert(surgeon.generate_report.any? { |line| line.include?("DONKI reports recent Solar Particle Events") })
     assert_equal 80, surgeon.calculate_health_score
   end
 
