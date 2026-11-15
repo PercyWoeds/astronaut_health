@@ -298,6 +298,18 @@ class HealthEvaluator
     REFERENCE_SCOPES.fetch(indicator_type.to_s, "Team-defined operational range (unverified)")
   end
 
+  # Watch-zone edges used by the Chart.js view as dashed reference lines.
+  # nil when the indicator has no team-defined thresholds (experimental types).
+  def self.chart_reference_lines(indicator_type)
+    t = THRESHOLDS[indicator_type.to_s]
+    return nil unless t
+
+    lines = {}
+    lines[:lower] = t[:yellow_low] || t[:red_low]
+    lines[:upper] = t[:yellow_high] || t[:red_high]
+    lines
+  end
+
   # CO₂ unit conversion from the verified reference block: ppm = mmHg × 1304.34.
   def self.mmhg_to_ppm(mmhg)
     (mmhg.to_f * CO2_PPM_PER_MMHG).round

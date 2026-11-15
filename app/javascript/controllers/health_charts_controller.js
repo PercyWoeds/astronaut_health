@@ -82,20 +82,23 @@ export default class extends Controller {
       pointBorderWidth: 2
     }]
 
-    // Referencia visual: umbral de hipertensión etapa 2 (AHA) en sistólica.
-    if (selectedType === "blood_pressure_systolic") {
-      chartDatasets.push({
-        label: "Reference 140 mmHg",
-        data: dataset.data.map(() => 140),
-        borderColor: "#fb7185",
-        borderDash: [6, 4],
-        borderWidth: 1.5,
-        pointRadius: 0,
-        pointHoverRadius: 0,
-        fill: false,
-        tension: 0
-      })
-    }
+    // Dashed reference lines: team-defined watch-zone edges + pre-flight baseline.
+    const dashedLine = (value, label, color) => ({
+      label,
+      data: dataset.labels.map(() => value),
+      borderColor: color,
+      borderDash: [6, 4],
+      borderWidth: 1.5,
+      pointRadius: 0,
+      pointHoverRadius: 0,
+      fill: false,
+      tension: 0
+    })
+
+    const lines = dataset.reference_lines || {}
+    if (lines.lower != null) chartDatasets.push(dashedLine(lines.lower, "Watch zone lower", "#fbbf24"))
+    if (lines.upper != null) chartDatasets.push(dashedLine(lines.upper, "Watch zone upper", "#fbbf24"))
+    if (dataset.baseline != null) chartDatasets.push(dashedLine(dataset.baseline, "Pre-flight baseline", "#a78bfa"))
 
     this.chart = new window.Chart(this.canvasTarget, {
       type: "line",

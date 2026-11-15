@@ -297,7 +297,11 @@ class HealthReading < ApplicationRecord
         unit: INDICATORS.dig(type, :unit),
         data: readings.map { |r| r.value },
         labels: readings.map { |r| r.measured_at.strftime("%d/%m %H:%M") },
-        statuses: readings.map(&:status)
+        statuses: readings.map(&:status),
+        reference_lines: HealthEvaluator.chart_reference_lines(type),
+        baseline: astronaut.health_readings
+          .where(indicator_type: type, is_baseline: true)
+          .order(measured_at: :desc).first&.value
       }
     end
 
