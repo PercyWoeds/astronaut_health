@@ -624,208 +624,230 @@
     
   </div>
   <%# ---------- New measurement modal ---------- %>
-  <div data-health-form-target="modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
-    <div class="w-full max-w-lg rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
-      <div class="flex items-start justify-between gap-4">
+  <div data-health-form-target="modal"
+       class="fixed inset-0 z-50 hidden items-end justify-center bg-slate-950/80 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+       role="dialog" aria-modal="true" aria-labelledby="register-measurement-title">
+    <div class="flex h-[100dvh] w-full max-w-2xl flex-col overflow-hidden border border-slate-700 bg-slate-900 shadow-2xl sm:h-auto sm:max-h-[80vh] sm:rounded-2xl">
+      <div class="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-800 bg-slate-900/95 px-4 py-3 backdrop-blur sm:px-6 sm:py-4">
         <div>
           <p class="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-400">New measurement</p>
-          <h2 class="mt-1 text-xl font-semibold text-white">Register indicator</h2>
+          <h2 id="register-measurement-title" class="mt-0.5 text-lg font-semibold text-white sm:text-xl">Register measurement</h2>
         </div>
-        <button type="button" data-action="click->health-form#close"
+        <button type="button" data-action="click->health-form#close" aria-label="Close"
                 class="rounded-lg border border-slate-700 px-2.5 py-1 text-sm text-slate-400 hover:bg-slate-800">✕</button>
       </div>
 
-      <form data-health-form-target="form" data-action="submit->health-form#submit" class="mt-5 space-y-4">
+      <form data-health-form-target="form" data-action="submit->health-form#submit"
+            class="flex min-h-0 flex-1 flex-col">
         <input type="hidden" name="health_reading[confirmed]" value="0" data-health-form-target="confirmed">
 
-        <div>
-          <label class="mb-1 block text-sm font-medium text-slate-300" for="health_reading_indicator_type">Indicator</label>
-          <select name="health_reading[indicator_type]" id="health_reading_indicator_type"
-                  data-health-form-target="indicator" data-action="change->health-form#updateUnit"
-                  class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500">
-            <% @indicator_options.each do |type, config| %>
-              <% plausibility = HealthReading.plausibility_range_for(type) %>
-              <% confirmation = HealthReading.confirmation_range_for(type) || {} %>
-              <% expected = HealthReading.expected_range_for(type) %>
-              <option value="<%= type %>"
-                      data-unit="<%= config[:unit] %>"
-                      data-units="<%= HealthReading.unit_options_for(type).join(',') %>"
-                      data-plausibility-min="<%= plausibility&.min %>"
-                      data-plausibility-max="<%= plausibility&.max %>"
-                      data-confirm-low="<%= confirmation[:low] %>"
-                      data-confirm-high="<%= confirmation[:high] %>"
-                      data-expected-min="<%= expected&.min %>"
-                      data-expected-max="<%= expected&.max %>"
-                      data-guide="<%= HealthReading::GUIDES[type] %>"
-                      data-citation="<%= HealthReading::CITATIONS[type] %>">
-                <%= config[:label] %> (<%= config[:unit] %>)
-              </option>
-            <% end %>
-          </select>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="mb-1 block text-sm font-medium text-slate-300" for="health_reading_value">Value</label>
-            <input type="number" step="0.1" name="health_reading[value]" id="health_reading_value" required
-                   data-health-form-target="value"
-                   class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500">
-            <p data-health-form-target="valueError" class="mt-1 hidden text-xs text-rose-300"></p>
-          </div>
-          <div>
-            <label class="mb-1 block text-sm font-medium text-slate-300" for="health_reading_unit">Unit</label>
-            <select name="health_reading[unit]" id="health_reading_unit"
-                    data-health-form-target="unit" data-action="change->health-form#convertValue"
-                    class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500">
-              <% HealthReading::UNIT_CHOICES.each do |unit| %>
-                <option value="<%= unit %>"><%= unit %></option>
-              <% end %>
-            </select>
-          </div>
-        </div>
-
-        <p data-health-form-target="help" class="text-[11px] leading-relaxed text-slate-500"></p>
-
-        <div>
-          <label class="mb-1 block text-sm font-medium text-slate-300" for="health_reading_data_origin">Data origin</label>
-          <select name="health_reading[data_origin]" id="health_reading_data_origin"
-                  data-health-form-target="dataOrigin"
-                  class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500">
-            <% HealthReading::DATA_ORIGINS.each do |origin| %>
-              <option value="<%= origin %>"><%= HealthReading::DATA_ORIGIN_LABELS[origin] %></option>
-            <% end %>
-          </select>
-        </div>
-
-        <div data-health-form-target="experimentalFields" class="hidden space-y-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3">
-          <p class="text-[10px] font-semibold uppercase tracking-wider text-cyan-400">Experimental indicator · not a clinical measurement</p>
-
-          <div data-health-form-target="hydrationFields" class="hidden space-y-4">
-            <div>
-              <label class="mb-1 block text-sm font-medium text-slate-300" for="health_reading_thirst_score">Thirst score (0-10)</label>
-              <input type="number" min="0" max="10" step="1" name="health_reading[thirst_score]" id="health_reading_thirst_score"
-                     data-health-form-target="thirstScore"
-                     class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500">
-            </div>
-          </div>
-
-          <div data-health-form-target="muscleFields" class="hidden space-y-4">
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="mb-1 block text-sm font-medium text-slate-300" for="health_reading_resistance_minutes">Resistance minutes</label>
-                <input type="number" min="0" max="300" step="1" name="health_reading[resistance_minutes]" id="health_reading_resistance_minutes"
-                       data-health-form-target="resistanceMinutes"
-                       class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500">
-              </div>
-              <div>
-                <label class="mb-1 block text-sm font-medium text-slate-300" for="health_reading_aerobic_minutes">Aerobic minutes</label>
-                <input type="number" min="0" max="300" step="1" name="health_reading[aerobic_minutes]" id="health_reading_aerobic_minutes"
-                       data-health-form-target="aerobicMinutes"
-                       class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500">
-              </div>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="mb-1 block text-sm font-medium text-slate-300" for="health_reading_perceived_exertion">Perceived exertion (1-10)</label>
-                <input type="number" min="1" max="10" step="1" name="health_reading[perceived_exertion]" id="health_reading_perceived_exertion"
-                       data-health-form-target="perceivedExertion"
-                       class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500">
-              </div>
-              <div>
-                <label class="mb-1 block text-sm font-medium text-slate-300" for="health_reading_muscle_soreness">Muscle soreness / weakness (0-10)</label>
-                <input type="number" min="0" max="10" step="1" name="health_reading[muscle_soreness]" id="health_reading_muscle_soreness"
-                       data-health-form-target="muscleSoreness"
-                       class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500">
-              </div>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="mb-1 block text-sm font-medium text-slate-300" for="health_reading_external_load_kg">External load kg (device only)</label>
-                <input type="number" min="0" max="400" step="0.5" name="health_reading[external_load_kg]" id="health_reading_external_load_kg"
-                       data-health-form-target="externalLoadKg"
-                       class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500">
-              </div>
-              <div>
-                <label class="mb-1 block text-sm font-medium text-slate-300" for="health_reading_external_reps">External reps (device only)</label>
-                <input type="number" min="0" max="50" step="1" name="health_reading[external_reps]" id="health_reading_external_reps"
-                       data-health-form-target="externalReps"
-                       class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500">
-              </div>
-            </div>
-          </div>
-
-          <div data-health-form-target="balanceFields" class="hidden space-y-4">
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="mb-1 block text-sm font-medium text-slate-300" for="health_reading_balance_episodes">Balance episodes today</label>
-                <input type="number" min="0" max="50" step="1" name="health_reading[balance_episodes]" id="health_reading_balance_episodes"
-                       data-health-form-target="balanceEpisodes"
-                       class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500">
-              </div>
-              <div>
-                <label class="mb-1 block text-sm font-medium text-slate-300" for="health_reading_balance_environment">Test environment</label>
-                <select name="health_reading[balance_environment]" id="health_reading_balance_environment"
-                        data-health-form-target="balanceEnvironment"
-                        class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500">
-                  <option value="earth">Earth</option>
-                  <option value="moon">Moon</option>
-                  <option value="mars">Mars</option>
+        <div class="flex-1 space-y-3 overflow-y-auto px-4 py-4 sm:px-6">
+          <section class="space-y-3">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Indicator</p>
+            <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div class="md:col-span-2">
+                <label class="mb-1 block text-xs font-medium text-slate-300" for="health_reading_indicator_type">Indicator</label>
+                <select name="health_reading[indicator_type]" id="health_reading_indicator_type"
+                        data-health-form-target="indicator" data-action="change->health-form#updateUnit"
+                        class="h-10 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-cyan-500">
+                  <% @indicator_options.each do |type, config| %>
+                    <% plausibility = HealthReading.plausibility_range_for(type) %>
+                    <% confirmation = HealthReading.confirmation_range_for(type) || {} %>
+                    <% expected = HealthReading.expected_range_for(type) %>
+                    <option value="<%= type %>"
+                            data-unit="<%= config[:unit] %>"
+                            data-units="<%= HealthReading.unit_options_for(type).join(',') %>"
+                            data-plausibility-min="<%= plausibility&.min %>"
+                            data-plausibility-max="<%= plausibility&.max %>"
+                            data-confirm-low="<%= confirmation[:low] %>"
+                            data-confirm-high="<%= confirmation[:high] %>"
+                            data-expected-min="<%= expected&.min %>"
+                            data-expected-max="<%= expected&.max %>"
+                            data-guide="<%= HealthReading::GUIDES[type] %>"
+                            data-citation="<%= HealthReading::CITATIONS[type] %>">
+                      <%= config[:label] %> (<%= config[:unit] %>)
+                    </option>
+                  <% end %>
                 </select>
               </div>
             </div>
+          </section>
+
+          <section class="space-y-3">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Value</p>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div class="sm:col-span-2">
+                <label class="mb-1 block text-xs font-medium text-slate-300" for="health_reading_value">Value</label>
+                <input type="number" step="0.1" name="health_reading[value]" id="health_reading_value" required
+                       data-health-form-target="value"
+                       class="h-10 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-cyan-500">
+                <p data-health-form-target="valueError" class="mt-1 hidden text-xs text-rose-300"></p>
+              </div>
+              <div>
+                <label class="mb-1 block text-xs font-medium text-slate-300" for="health_reading_unit">Unit</label>
+                <select name="health_reading[unit]" id="health_reading_unit"
+                        data-health-form-target="unit" data-action="change->health-form#convertValue"
+                        class="h-10 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-cyan-500">
+                  <% HealthReading::UNIT_CHOICES.each do |unit| %>
+                    <option value="<%= unit %>"><%= unit %></option>
+                  <% end %>
+                </select>
+              </div>
+            </div>
+            <p data-health-form-target="help" class="text-[11px] leading-relaxed text-slate-500"></p>
+          </section>
+
+          <section class="space-y-3">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Details</p>
+            <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div>
+                <label class="mb-1 block text-xs font-medium text-slate-300" for="health_reading_data_origin">Data origin</label>
+                <select name="health_reading[data_origin]" id="health_reading_data_origin"
+                        data-health-form-target="dataOrigin"
+                        class="h-10 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-cyan-500">
+                  <% HealthReading::DATA_ORIGINS.each do |origin| %>
+                    <option value="<%= origin %>"><%= HealthReading::DATA_ORIGIN_LABELS[origin] %></option>
+                  <% end %>
+                </select>
+              </div>
+              <div>
+                <label class="mb-1 block text-xs font-medium text-slate-300" for="health_reading_measured_at">Date and time (optional)</label>
+                <input type="datetime-local" name="health_reading[measured_at]" id="health_reading_measured_at"
+                       max="<%= Time.current.strftime('%Y-%m-%dT%H:%M') %>"
+                       class="h-10 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-cyan-500">
+              </div>
+            </div>
+
+            <div data-health-form-target="experimentalFields" class="hidden rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3">
+              <p class="text-[10px] font-semibold uppercase tracking-wider text-cyan-400">Experimental indicator · not a clinical measurement</p>
+
+              <div data-health-form-target="hydrationFields" class="mt-3 hidden">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-300" for="health_reading_thirst_score">Thirst score (0-10)</label>
+                    <input type="number" min="0" max="10" step="1" name="health_reading[thirst_score]" id="health_reading_thirst_score"
+                           data-health-form-target="thirstScore"
+                           class="h-10 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-cyan-500">
+                  </div>
+                </div>
+              </div>
+
+              <div data-health-form-target="muscleFields" class="mt-3 hidden">
+                <details class="group">
+                  <summary class="cursor-pointer select-none text-sm font-medium text-cyan-200 marker:text-cyan-400">Advanced details (training)</summary>
+                  <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <div>
+                      <label class="mb-1 block text-xs font-medium text-slate-300" for="health_reading_resistance_minutes">Resistance minutes</label>
+                      <input type="number" min="0" max="300" step="1" name="health_reading[resistance_minutes]" id="health_reading_resistance_minutes"
+                             data-health-form-target="resistanceMinutes"
+                             class="h-10 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-cyan-500">
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-xs font-medium text-slate-300" for="health_reading_aerobic_minutes">Aerobic minutes</label>
+                      <input type="number" min="0" max="300" step="1" name="health_reading[aerobic_minutes]" id="health_reading_aerobic_minutes"
+                             data-health-form-target="aerobicMinutes"
+                             class="h-10 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-cyan-500">
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-xs font-medium text-slate-300" for="health_reading_perceived_exertion">Exertion (1-10)</label>
+                      <input type="number" min="1" max="10" step="1" name="health_reading[perceived_exertion]" id="health_reading_perceived_exertion"
+                             data-health-form-target="perceivedExertion"
+                             class="h-10 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-cyan-500">
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-xs font-medium text-slate-300" for="health_reading_muscle_soreness">Soreness (0-10)</label>
+                      <input type="number" min="0" max="10" step="1" name="health_reading[muscle_soreness]" id="health_reading_muscle_soreness"
+                             data-health-form-target="muscleSoreness"
+                             class="h-10 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-cyan-500">
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-xs font-medium text-slate-300" for="health_reading_external_load_kg">Load kg (device)</label>
+                      <input type="number" min="0" max="400" step="0.5" name="health_reading[external_load_kg]" id="health_reading_external_load_kg"
+                             data-health-form-target="externalLoadKg"
+                             class="h-10 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-cyan-500">
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-xs font-medium text-slate-300" for="health_reading_external_reps">Reps (device)</label>
+                      <input type="number" min="0" max="50" step="1" name="health_reading[external_reps]" id="health_reading_external_reps"
+                             data-health-form-target="externalReps"
+                             class="h-10 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-cyan-500">
+                    </div>
+                  </div>
+                </details>
+              </div>
+
+              <div data-health-form-target="balanceFields" class="mt-3 hidden">
+                <details class="group">
+                  <summary class="cursor-pointer select-none text-sm font-medium text-cyan-200 marker:text-cyan-400">Advanced details (balance test)</summary>
+                  <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                      <label class="mb-1 block text-xs font-medium text-slate-300" for="health_reading_balance_episodes">Episodes today</label>
+                      <input type="number" min="0" max="50" step="1" name="health_reading[balance_episodes]" id="health_reading_balance_episodes"
+                             data-health-form-target="balanceEpisodes"
+                             class="h-10 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-cyan-500">
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-xs font-medium text-slate-300" for="health_reading_balance_environment">Test environment</label>
+                      <select name="health_reading[balance_environment]" id="health_reading_balance_environment"
+                              data-health-form-target="balanceEnvironment"
+                              class="h-10 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-cyan-500">
+                        <option value="earth">Earth</option>
+                        <option value="moon">Moon</option>
+                        <option value="mars">Mars</option>
+                      </select>
+                    </div>
+                    <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-700 bg-slate-950/60 p-3 hover:border-cyan-500/40 sm:col-span-2">
+                      <input type="checkbox" name="health_reading[balance_test_performed]" value="1"
+                             data-health-form-target="balanceTestPerformed"
+                             class="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-900 accent-cyan-500">
+                      <span>
+                        <span class="block text-sm font-medium text-slate-200">Performed supported balance test</span>
+                        <span class="block text-[11px] text-slate-500">Stable surface and companion only. Not in microgravity, landing day, or with symptoms.</span>
+                      </span>
+                    </label>
+                    <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-700 bg-slate-950/60 p-3 hover:border-cyan-500/40 sm:col-span-2">
+                      <input type="checkbox" name="health_reading[balance_test_supported]" value="1"
+                             data-health-form-target="balanceTestSupported"
+                             class="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-900 accent-cyan-500">
+                      <span>
+                        <span class="block text-sm font-medium text-slate-200">I had support nearby</span>
+                        <span class="block text-[11px] text-slate-500">Required if you performed the test.</span>
+                      </span>
+                    </label>
+                  </div>
+                </details>
+              </div>
+            </div>
+
+            <div data-health-form-target="guideBlock" class="hidden rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3">
+              <p class="text-[10px] font-semibold uppercase tracking-wider text-cyan-400">Measurement guide</p>
+              <p data-health-form-target="guide" class="mt-1 text-[11px] leading-relaxed text-cyan-100/80"></p>
+              <p data-health-form-target="citation" class="mt-1 text-[10px] text-slate-500"></p>
+            </div>
+
             <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-700 bg-slate-950/60 p-3 hover:border-cyan-500/40">
-              <input type="checkbox" name="health_reading[balance_test_performed]" value="1"
-                     data-health-form-target="balanceTestPerformed"
+              <input type="checkbox" name="health_reading[is_baseline]" value="1"
+                     data-health-form-target="baseline"
                      class="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-900 accent-cyan-500">
               <span>
-                <span class="block text-sm font-medium text-slate-200">Performed supported balance test</span>
-                <span class="block text-[11px] text-slate-500">Stable surface and companion only. Not applicable in microgravity, on landing day, or with symptoms.</span>
+                <span class="block text-sm font-medium text-slate-200">Pre-flight reading (baseline)</span>
+                <span class="block text-[11px] text-slate-500">Reference value. Deviations &gt; 20% during mission will be flagged.</span>
               </span>
             </label>
-            <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-700 bg-slate-950/60 p-3 hover:border-cyan-500/40">
-              <input type="checkbox" name="health_reading[balance_test_supported]" value="1"
-                     data-health-form-target="balanceTestSupported"
-                     class="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-900 accent-cyan-500">
-              <span>
-                <span class="block text-sm font-medium text-slate-200">I had support nearby</span>
-                <span class="block text-[11px] text-slate-500">Required if you performed the test.</span>
-              </span>
-            </label>
+
+            <p data-health-form-target="error" class="hidden rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200"></p>
+          </section>
+        </div>
+
+        <div class="sticky bottom-0 border-t border-slate-800 bg-slate-900/95 px-4 py-3 backdrop-blur sm:px-6">
+          <div class="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-end sm:gap-3">
+            <button type="button" data-action="click->health-form#close" aria-label="Cancel"
+                    class="h-10 w-full rounded-xl border border-slate-700 px-4 text-sm text-slate-300 hover:bg-slate-800 sm:w-auto">Cancel</button>
+            <button type="submit" data-health-form-target="submitButton" aria-label="Save measurement"
+                    class="h-10 w-full rounded-xl bg-cyan-500 px-4 text-sm font-semibold text-slate-950 hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto">
+              Save measurement
+            </button>
           </div>
-        </div>
-
-        <div data-health-form-target="guideBlock" class="hidden rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3">
-          <p class="text-[10px] font-semibold uppercase tracking-wider text-cyan-400">Measurement guide</p>
-          <p data-health-form-target="guide" class="mt-1 text-[11px] leading-relaxed text-cyan-100/80"></p>
-          <p data-health-form-target="citation" class="mt-1 text-[10px] text-slate-500"></p>
-        </div>
-
-        <div>
-          <label class="mb-1 block text-sm font-medium text-slate-300" for="health_reading_measured_at">Date and time (optional)</label>
-          <input type="datetime-local" name="health_reading[measured_at]" id="health_reading_measured_at"
-                 max="<%= Time.current.strftime('%Y-%m-%dT%H:%M') %>"
-                 class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500">
-        </div>
-
-        <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-700 bg-slate-950/60 p-3 hover:border-cyan-500/40">
-          <input type="checkbox" name="health_reading[is_baseline]" value="1"
-                 data-health-form-target="baseline"
-                 class="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-900 accent-cyan-500">
-          <span>
-            <span class="block text-sm font-medium text-slate-200">Pre-flight reading (baseline)</span>
-            <span class="block text-[11px] text-slate-500">Stores this value as a reference. If an indicator deviates &gt; 20 %, it will be flagged yellow.</span>
-          </span>
-        </label>
-
-        <p data-health-form-target="error" class="hidden rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200"></p>
-
-        <div class="flex items-center justify-end gap-3 pt-2">
-          <button type="button" data-action="click->health-form#close"
-                  class="rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Cancel</button>
-          <button type="submit" data-health-form-target="submitButton"
-                  class="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60">
-            Save measurement
-          </button>
         </div>
       </form>
     </div>

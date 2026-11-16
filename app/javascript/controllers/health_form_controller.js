@@ -37,9 +37,16 @@ export default class extends Controller {
 
   connect() {
     this.currentUnit = null
+    this.previouslyFocused = null
 
     this.onKeydown = (event) => {
-      if (event.key === "Escape" && this.isOpen) this.close()
+      if (!this.isOpen) return
+      if (event.key === "Escape") {
+        event.preventDefault()
+        this.close()
+        return
+      }
+      if (event.key === "Tab") this.trapFocus(event)
     }
     document.addEventListener("keydown", this.onKeydown)
     this.updateUnit()
@@ -51,23 +58,55 @@ export default class extends Controller {
   }
 
   get isOpen() {
-    return !this.modalTarget.classList.contains("hidden")
+    return this.hasModalTarget && !this.modalTarget.classList.contains("hidden")
   }
 
   open() {
+    this.previouslyFocused = document.activeElement
     this.modalTarget.classList.remove("hidden")
     this.modalTarget.classList.add("flex")
+    document.body.classList.add("overflow-hidden")
     this.clearError()
     this.clearValueError()
     this.updateUnit()
-    setTimeout(() => this.valueTarget?.focus(), 50)
+    setTimeout(() => this.firstFocusable()?.focus(), 50)
   }
 
   close() {
     this.modalTarget.classList.add("hidden")
     this.modalTarget.classList.remove("flex")
+    document.body.classList.remove("overflow-hidden")
     this.clearError()
     this.clearValueError()
+    if (this.previouslyFocused?.focus) this.previouslyFocused.focus()
+  }
+
+  focusableElements() {
+    if (!this.hasModalTarget) return []
+    return Array.from(
+      this.modalTarget.querySelectorAll(
+        'a[href], button:not([disabled]), textarea, input:not([type="hidden"]):not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+    ).filter((el) => !el.hasAttribute("disabled") && el.offsetParent !== null)
+  }
+
+  firstFocusable() {
+    const focusables = this.focusableElements()
+    return this.hasValueTarget ? this.valueTarget : focusables[0]
+  }
+
+  trapFocus(event) {
+    const focusables = this.focusableElements()
+    if (focusables.length === 0) return
+    const first = focusables[0]
+    const last = focusables[focusables.length - 1]
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first.focus()
+    }
   }
 
   // Abre el modal con un indicador preseleccionado (usado por el aviso de pendientes).

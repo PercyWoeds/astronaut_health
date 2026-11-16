@@ -4,18 +4,18 @@
   "red" => "bg-rose-500/15 text-rose-300 border-rose-500/40"
 } %>
 
-<div class="mx-auto max-w-xl px-4 py-10">
-  <div class="mb-6 flex items-center justify-between">
+<div class="mx-auto max-w-xl px-4 py-8">
+  <div class="mb-4 flex items-center justify-between">
     <%= link_to "← Back to dashboard", root_path(mission_id: @astronaut.mission_id, astronaut_id: @astronaut.id), class: "text-sm text-cyan-400 hover:text-cyan-300" %>
     <span class="text-xs uppercase tracking-wider text-slate-500"><%= @astronaut.name %> · <%= @astronaut.mission.name %></span>
   </div>
 
-  <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl">
+  <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-xl">
     <p class="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-400">New reading</p>
-    <h1 class="mt-1 text-2xl font-bold text-white">Log health indicator</h1>
-    <p class="mt-2 text-sm text-slate-400">The status is calculated automatically based on HealthEvaluator thresholds.</p>
+    <h1 class="mt-1 text-xl font-bold text-white">Register measurement</h1>
+    <p class="mt-1 text-sm text-slate-400">Status is calculated automatically from HealthEvaluator thresholds.</p>
 
-    <%= form_with model: @reading, url: health_readings_path(mission_id: @astronaut.mission_id, astronaut_id: @astronaut.id), class: "mt-6 space-y-4" do |form| %>
+    <%= form_with model: @reading, url: health_readings_path(mission_id: @astronaut.mission_id, astronaut_id: @astronaut.id), class: "mt-4 space-y-3" do |form| %>
       <% if @reading.errors.any? %>
         <div class="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-200">
           <ul class="list-inside list-disc space-y-1">
@@ -27,24 +27,24 @@
       <% end %>
 
       <div>
-        <%= form.label :indicator_type, "Indicator", class: "mb-1 block text-sm font-medium text-slate-300" %>
+        <%= form.label :indicator_type, "Indicator", class: "mb-1 block text-xs font-medium text-slate-300" %>
         <%= form.select :indicator_type,
               @indicator_options.map { |type, config| ["#{config[:label]} (#{config[:unit]})", type] },
               {},
-              class: "w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500" %>
+              class: "h-10 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-cyan-500" %>
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <%= form.label :value, "Value", class: "mb-1 block text-sm font-medium text-slate-300" %>
-          <%= form.number_field :value, step: "0.1", class: "w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500" %>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div class="sm:col-span-2">
+          <%= form.label :value, "Value", class: "mb-1 block text-xs font-medium text-slate-300" %>
+          <%= form.number_field :value, step: "0.1", class: "h-10 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-cyan-500" %>
         </div>
         <div>
-          <%= form.label :unit, "Unit", class: "mb-1 block text-sm font-medium text-slate-300" %>
+          <%= form.label :unit, "Unit", class: "mb-1 block text-xs font-medium text-slate-300" %>
           <%= form.select :unit,
                 HealthReading::UNIT_CHOICES.map { |unit| [unit, unit] },
                 { selected: @reading.unit },
-                class: "w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500" %>
+                class: "h-10 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-cyan-500" %>
         </div>
       </div>
 
@@ -57,8 +57,8 @@
       <% end %>
 
       <div>
-        <%= form.label :measured_at, "Date and time", class: "mb-1 block text-sm font-medium text-slate-300" %>
-        <%= form.datetime_local_field :measured_at, max: Time.current.strftime("%Y-%m-%dT%H:%M"), class: "w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-500" %>
+        <%= form.label :measured_at, "Date and time", class: "mb-1 block text-xs font-medium text-slate-300" %>
+        <%= form.datetime_local_field :measured_at, max: Time.current.strftime("%Y-%m-%dT%H:%M"), class: "h-10 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-cyan-500" %>
       </div>
 
       <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3 hover:border-cyan-500/40">
@@ -78,7 +78,7 @@
       </label>
 
       <%= form.submit "Save reading",
-            class: "w-full cursor-pointer rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-slate-950 hover:bg-cyan-400" %>
+            class: "h-10 w-full cursor-pointer rounded-xl bg-cyan-500 px-4 text-sm font-semibold text-slate-950 hover:bg-cyan-400" %>
     <% end %>
   </div>
 </div>
